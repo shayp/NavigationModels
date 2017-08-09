@@ -37,17 +37,19 @@ load (path)
 % filt_eeg = local field potential, filtered for theta frequency (4-12 Hz)
 % eeg_sample_rate = sample rate of filt_eeg (250 Hz)
 % sampleRate = sampling rate of neural data and behavioral variable (50Hz)
-Max_Speed = 40;
-Min_Speed = 1.5;
-numPos = 400; numHD = 10; numSpd = 10; % hardcoded: number of parameters
+Max_Speed_X = 40;
+Max_Speed_Y = 20;
+numPos = 225; numHD = 18; % hardcoded: number of parameters
 numBorder = 10;
-numVelX = 30;
+numVelX = 20;
+numVelY = 20;
+numVel = numVelX * numVelY;
+sampleRate = 8;
 % initialize the number of bins that position, head direction, speed, and
 % theta phase will be divided into
 n_pos_bins = sqrt(numPos);
 n_dir_bins = numHD;
-n_speed_bins = numSpd;
-n_vel_bins = numVelX;
+n_vel_bins = sqrt(numVel);
 n_border_bins = numBorder;
 
 %% fit the model

@@ -1,4 +1,4 @@
-function [testFit,trainFit,param_mean] = fit_model(A,dt,spiketrain,filter,modelType,numFolds, numPos, numHD, numSpd, numVelX, numBorder)
+function [testFit,trainFit,param_mean] = fit_model(A,dt,spiketrain,filter,modelType,numFolds, numPos, numHD, numVel, numBorder)
 
 %% Description
 % This code will section the data into 10 different portions. Each portion
@@ -52,7 +52,7 @@ for k = 1:numFolds
     else
         init_param = param;
     end
-    [param] = fminunc(@(param)ln_poisson_model(param,data,modelType, numPos, numHD, numSpd, numVelX, numBorder),init_param,opts);
+    [param] = fminunc(@(param)ln_poisson_model(param,data,modelType, numPos, numHD, numVel, numBorder),init_param,opts);
     
     %%%%%%%%%%%%% TEST DATA %%%%%%%%%%%%%%%%%%%%%%%
     % compute the firing rate
@@ -78,10 +78,9 @@ for k = 1:numFolds
 %         log_llh_test_mean = nansum(meanFR_test - n.*log2(meanFR_test));
         log_llh_test = NaN;
     else
-         log_llh_test_model = nansum(r-n.* liniearProjection)/sum(n); %note: log(gamma(n+1)) will be unstable if n is large (which it isn't here)
-        log_llh_test_mean = nansum(meanFR_test-n.*log(meanFR_test))/sum(n);
-        %log_llh_test = (-log_llh_test_model + log_llh_test_mean);
-        log_llh_test = -log_llh_test_model;
+        log_llh_test_model = nansum(r-n.* liniearProjection + log(factorial(n)))/sum(n); %note: log(gamma(n+1)) will be unstable if n is large (which it isn't here)
+        log_llh_test_mean = nansum(meanFR_test-n.*log(meanFR_test) + log(factorial(n)))/sum(n);
+        log_llh_test = (-log_llh_test_model + log_llh_test_mean);
     end
     
     % compute MSE

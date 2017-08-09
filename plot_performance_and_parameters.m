@@ -7,39 +7,37 @@
 % show parameters from the full model
 
 % create x-axis vectors
-hd_vector = 2*pi/n_dir_bins/2:2*pi/n_dir_bins:2*pi - 2*pi/n_dir_bins/2;
-speed_vector = linspace(0, 40,length(speed_curve));
-velx_vector = linspace(-40, 40, length(velx_curve));
+hd_vector =  linspace(0, 2 * pi, n_dir_bins);
+velXAxis = linspace(-Max_Speed_X, Max_Speed_X, n_vel_bins);
+velYAxis = linspace(Max_Speed_X, -Max_Speed_X, n_vel_bins);
+
+posXAxes = linspace(0, boxSize(1), n_pos_bins);
+posYAxes = linspace(boxSize(2),0, n_pos_bins);
 % plot the tuning curves
 figure();
-subplot(3,5,1)
-imagesc(pos_curve); colorbar
-axis off
+subplot(3,4,1)
+imagesc(posXAxes, fliplr(posYAxes), pos_curve); colorbar
+%set(gca,'YTickLabel',{num2str(posYAxes)})
 title('Position')
-ylabel('Spikes/s');
-
-subplot(3,5,2)
+xlabel('X Dim(cms)')
+ylabel('Y Dim(cms)')
+    
+subplot(3,4,2)
 plot(hd_vector,hd_curve,'k','linewidth',3)
 box off
 axis([0 2*pi -inf inf])
 xlabel('direction angle')
 ylabel('Spikes/s');
 title('Head direction')
-subplot(3,5,3)
-plot(speed_vector,speed_curve,'k','linewidth',3)
-box off
-xlabel('Running speed')
-ylabel('Spikes/s');
-axis([0 40 -inf inf])
-title('Speed')
-subplot(3,5,4)
-plot(velx_vector,velx_curve,'k','linewidth',3)
-box off
-xlabel('Velocity (dv/dt)')
-ylabel('Spikes/s');
-title('Velocity')
-subplot(3,5,5)
 
+subplot(3,4,3)
+imagesc(velXAxis, fliplr(velYAxis), vel_curve); colorbar
+%set(gca,'YTickLabel',{num2str(velYAxis)})
+
+xlabel('dx/dt(cm/s)')
+ylabel('dy/dt(cm/s)')
+
+subplot(3,4,4)
 plot(borderBins,border_curve,'k','linewidth',3)
 box off
 xlabel('Distance from border(cm)')
@@ -53,40 +51,33 @@ end
 
 param_selected_model = param{selected_model};
 [varExplain, correlation, mse] =  estimateModelPerformance(spiketrain, A{selected_model}, param_selected_model, dt, filter);
-[pos_param,hd_param,speed_param, velx_param, border_param] = find_param(param_selected_model,modelType{selected_model}, numPos, numHD, numSpd, numVelX, numBorder);
-% posNanInd =find(isnan(pos_param));
-% pos_param(posNanInd) = -100;
-% hdNanInd =find(isnan(hd_param));
-% hd_param(hdNanInd) = -100;
-% speedNanInd =find(isnan(speed_param));
-% speed_param(speedNanInd) = -100;
-
+[pos_param,hd_param, vel_param, border_param] = find_param(param_selected_model,modelType{selected_model}, numPos, numHD, numVel, numBorder);
 if numel(pos_param) ~= numPos
     pos_param = 0;
 end
 if numel(hd_param) ~= numHD
     hd_param = 0;
 end
-if numel(speed_param) ~= numSpd
-    speed_param = 0;
-end
-if numel(velx_param) ~= numVelX
-    velx_param = 0;
+if numel(vel_param) ~= numVel
+    vel_param = 0;
 end
 if numel(border_param) ~= numBorder
     border_param = 0;
 end
 if numel(pos_param) == numPos
-    scale_factor_pos = mean(exp(speed_param))*mean(exp(hd_param))*mean(exp(velx_param))*mean(exp(border_param))/ sampleRate;
+    scale_factor_pos = mean(exp(hd_param))*mean(exp(vel_param))*mean(exp(border_param))* sampleRate;
     pos_response = scale_factor_pos*exp(pos_param);
-    subplot(3,5,6)
-    imagesc(reshape(pos_response,n_pos_bins,n_pos_bins)); axis on; colorbar;
+    subplot(3,4,5)
+    imagesc(posXAxes, fliplr(posYAxes),reshape(pos_response,n_pos_bins,n_pos_bins)); axis on; colorbar;
+    %set(gca,'YTickLabel',{num2str(posYAxes)})
+    xlabel('X Dim(cms)')
+    ylabel('Y Dim(cms)')
 end
 
 if  numel(hd_param) == numHD
-    scale_factor_hd = mean(exp(speed_param))*mean(exp(pos_param))*mean(exp(velx_param))*mean(exp(border_param))/ sampleRate;
+    scale_factor_hd =mean(exp(pos_param))*mean(exp(vel_param))*mean(exp(border_param))* sampleRate;
     hd_response = scale_factor_hd*exp(hd_param);
-    subplot(3,5,7)
+    subplot(3,4,6)
     plot(hd_vector,hd_response,'k','linewidth',3)
     xlabel('direction angle')
     box off
@@ -94,40 +85,28 @@ if  numel(hd_param) == numHD
     ylabel('Spikes/s');
 end
 
-if numel(speed_param) == numSpd
+
+if numel(vel_param) == numVel
     % compute the scale factors
-    scale_factor_spd = mean(exp(pos_param))*mean(exp(hd_param))*mean(exp(velx_param))*mean(exp(border_param))/ sampleRate;
+    scale_factor_vel = mean(exp(pos_param))*mean(exp(hd_param))*mean(exp(border_param)) * sampleRate;
 
     % compute the model-derived response profiles
-    speed_response = scale_factor_spd*exp(speed_param);
-    subplot(3,5,8)
-    plot(speed_vector,speed_response,'k','linewidth',3)
-    xlabel('Running speed (cm/s)')
-    ylabel('Spikes/s');
-    box off
-    xlim([0 limitSppedToPlot]);
-end
-
-if numel(velx_param) == numVelX
-    % compute the scale factors
-    scale_factor_velx = mean(exp(pos_param))*mean(exp(hd_param))*mean(exp(speed_param))*mean(exp(border_param))/ sampleRate;
-
-    % compute the model-derived response profiles
-    velx_response = scale_factor_velx*exp(velx_param);
-    subplot(3,5,9)
-    plot(velx_vector,velx_response,'k','linewidth',3)
-    xlabel('Velocity')
-    ylabel('Spikes/s');
+    vel_response = scale_factor_vel*exp(vel_param);
+    subplot(3,4,7)
+    imagesc(velXAxis, fliplr(velYAxis),reshape(vel_response,n_vel_bins,n_vel_bins)); axis on; colorbar;
+    %set(gca,'YTickLabel',{num2str(velYAxis)})
+    xlabel('dx/dt(cm/s)')
+    ylabel('dy/dt(cm/s)')
     box off
 end
 
 if numel(border_param) == numBorder
     % compute the scale factors
-    scale_factor_Border = mean(exp(pos_param))*mean(exp(hd_param))*mean(exp(speed_param))*mean(exp(velx_param))/ sampleRate;
+    scale_factor_Border = mean(exp(pos_param))*mean(exp(hd_param))*mean(exp(vel_param))* sampleRate;
 
     % compute the model-derived response profiles
     border_response = scale_factor_Border*exp(border_param);
-    subplot(3,5,10)
+    subplot(3,4,8)
     plot(borderBins,border_response,'k','linewidth',3)
     xlabel('Distance from border')
     ylabel('Spikes/s');
@@ -142,33 +121,29 @@ end
 LLH_values = LLH_values(all(~isnan(LLH_values),2),:);
 LLH_increase_mean = nanmean(LLH_values);
 LLH_increase_sem = std(LLH_values)/sqrt(numFolds);
-subplot(3,5,11:15)
+subplot(3,4,9:12)
 
 errorbar(LLH_increase_mean,LLH_increase_sem,'ok','linewidth',3)
 hold on
- meanLL = zeros(32,1);
- meanLL = meanLL + median(LLH_increase_mean);
- plot(0.5:31.5,meanLL,'--b','linewidth',2)
+ meanLL = zeros(numModels + 1,1);
+% meanLL = meanLL + median(LLH_increase_mean);
+ plot(0.5:numModels + 0.5,meanLL,'--b','linewidth',2)
 
 if noModelSelected
     plot(selected_model,LLH_increase_mean(selected_model),'.g','markersize',25)
-    legend('Model performance', 'Median','Selected model(Not signifcant)', 'Location','bestoutside')
+    legend('Model performance', 'Baseline','Selected model(Not signifcant)', 'Location','bestoutside')
 else
     plot(selected_model,LLH_increase_mean(selected_model),'.r','markersize',25)
-    legend('Model performance', 'Median','Selected model', 'Location','bestoutside')
+    legend('Model performance', 'Baseline','Selected model', 'Location','bestoutside')
 end
 hold off
 box off
 set(gca,'fontsize',10)
-set(gca,'XLim',[0 32]); set(gca,'XTick',1:31)
-set(gca,'XTickLabel',{'phsvb', 'phsv', 'phsb', 'phvb', 'psvb', 'hsvb', 'phs', 'phv', 'phb', 'psv','psb', 'pvb','hsv','hsb', 'hvb','svb','ph', 'ps', 'pv','pb','hs','hv', 'hb', 'sv', 'sb', 'vb','p','h','s','v','b'});
+set(gca,'XLim',[0 numModels + 1]); set(gca,'XTick',1:numModels)
+set(gca,'XTickLabel',{'phvb', 'phv', 'phb', 'pvb', 'hvb','ph', 'pv','pb','hv', 'hb', 'vb','p','h','v','b'});
 ylim([(median(LLH_increase_mean) - 3) (median(LLH_increase_mean) + 3)]);
 %[varExplain, correlation, mse] 
-title(['Neuron ' num2str(neuronNumber) ': Variance explained - ' num2str(varExplain * 100,2) '% R - ' num2str(correlation,2) ' mse - ' num2str(mse,3)]);
+title(['Neuron ' num2str(neuronNumber) ' - p value: ' num2str(pval_baseline,2) ' Variance explained: ' num2str(varExplain * 100,2) '% R: ' num2str(correlation,2) ' mse: ' num2str(mse,3)]);
 drawnow;
 
-if noModelSelected
-    savefig(['./Graphs/NotSig_TuningCurve_' num2str(neuronNumber)]);
-else
-    savefig(['./Graphs/Sig_TuningCurve_' num2str(neuronNumber)]);
-end
+savefig(['./Graphs/TuningCurve_' num2str(neuronNumber)]);

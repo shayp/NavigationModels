@@ -1,7 +1,7 @@
 function [posgrid, xBins, yBins] = pos_map(pos, nbins, boxSize)
 
-xBins = boxSize(1)/nbins/2:boxSize(1)/nbins:boxSize(1) - boxSize(1)/nbins/2;
-yBins = boxSize(2)/nbins/2:boxSize(2)/nbins:boxSize(2) - boxSize(2)/nbins/2;
+xBins = linspace(0, boxSize(1), nbins);
+yBins = linspace(0, boxSize(2), nbins);
 % store grid
 posgrid = zeros(length(pos), nbins * nbins);
 % loop over positions

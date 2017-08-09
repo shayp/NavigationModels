@@ -3,7 +3,7 @@ function [hd_grid,dirVec, headDirection] = hd_map(headDirection,nbins)
 headDirection = headDirection + pi;
 
 hd_grid = zeros(length(headDirection),nbins);
-dirVec = 2*pi/nbins/2:2*pi/nbins:2*pi-2*pi/nbins/2;
+dirVec = linspace(0, 2 * pi, nbins);
 
 for i = 1:numel(headDirection)
     

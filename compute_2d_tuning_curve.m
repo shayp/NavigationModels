@@ -4,8 +4,8 @@ function [tuning_curve] = compute_2d_tuning_curve(variable_x,variable_y,fr,numBi
 
 %% define the axes and initialize variables
 
-xAxis = linspace(minVal,maxVal(1),numBin+1);
-yAxis = linspace(minVal,maxVal(2),numBin+1);
+xAxis = linspace(minVal(1),maxVal(1),numBin+1);
+yAxis = linspace(minVal(2),maxVal(2),numBin+1);
 
 % initialize 
 tuning_curve = zeros(numBin,numBin);

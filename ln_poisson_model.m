@@ -1,4 +1,4 @@
-function [f, df, hessian] = ln_poisson_model(param,data,modelType, numPos, numHD, numSpd, numVelX, numBorder)
+function [f, df, hessian] = ln_poisson_model(param,data,modelType, numPos, numHD, numVel, numBorder)
 
 X = data{1}; % subset of A
 Y = data{2}; % number of spikes
@@ -9,9 +9,8 @@ rate = exp(u);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
-b_pos = 0.1; b_hd = 1e0; b_spd = 0.0001; b_velx = 10; b_border = 1e0;
-%b_pos = 0.1; b_hd = 1e0; b_spd = 0.0001; b_velx = 2; b_border = 1e0;
-%b_pos = 0; b_hd = 0; b_spd = 0; b_velx = 0; b_border = 0;
+b_pos = 0.5; b_hd = 1e0;  b_vel = 0.5; b_border = 1e0;
+%b_pos = 0; b_hd = 0;  b_vel = 0; b_border = 0;
 % start computing the Hessian
 rX = bsxfun(@times,rate,X);       
 hessian_glm = rX'*X;
@@ -21,11 +20,10 @@ hessian_glm = rX'*X;
 % initialize parameter-relevant variables
 J_pos = 0; J_pos_g = []; J_pos_h = []; 
 J_hd = 0; J_hd_g = []; J_hd_h = [];  
-J_spd = 0; J_spd_g = []; J_spd_h = [];  
-J_velx = 0; J_velx_g = []; J_velx_h = [];  
+J_vel = 0; J_vel_g = []; J_vel_h = [];  
 J_border = 0; J_border_g = []; J_border_h = [];  
 % find the parameters
-[param_pos,param_hd,param_spd, param_velx, param_border] = find_param(param,modelType,numPos,numHD,numSpd, numVelX, numBorder);
+[param_pos,param_hd,param_vel, param_border] = find_param(param,modelType,numPos,numHD, numVel, numBorder);
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
@@ -36,12 +34,9 @@ if ~isempty(param_hd)
     [J_hd,J_hd_g,J_hd_h] = rough_penalty_1d_circ(param_hd,b_hd);
 end
 
-if ~isempty(param_spd)
-    [J_spd,J_spd_g,J_spd_h] = rough_penalty_1d(param_spd,b_spd);
-end
 
-if ~isempty(param_velx)
-    [J_velx,J_velx_g,J_velx_h] = rough_penalty_1d(param_velx,b_velx);
+if ~isempty(param_vel)
+    [J_vel,J_vel_g,J_vel_h] = rough_penalty_2d(param_vel,b_vel);
 end
 
 if ~isempty(param_border)
@@ -49,9 +44,9 @@ if ~isempty(param_border)
 end
 
 %% compute f, the gradient, and the hessian 
-f = sum(rate-Y.*u) + J_pos + J_hd + J_spd + J_velx + J_border;
-df = real(X' * (rate - Y) + [J_pos_g; J_hd_g; J_spd_g; J_velx_g; J_border_g]);
-hessian = hessian_glm + blkdiag(J_pos_h,J_hd_h,J_spd_h, J_velx_h, J_border_h);
+f = sum(rate-Y.*u) + J_pos + J_hd + J_vel + J_border;
+df = real(X' * (rate - Y) + [J_pos_g; J_hd_g; J_vel_g; J_border_g]);
+hessian = hessian_glm + blkdiag(J_pos_h,J_hd_h, J_vel_h, J_border_h);
 
 
 %% smoothing functions called in the above script
