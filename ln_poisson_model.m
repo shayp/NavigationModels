@@ -9,8 +9,9 @@ rate = exp(u);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
-b_pos = 0.1; b_hd = 1e0; b_spd = 0.0001; b_velx = 2; b_border = 1e0;
-%b_pos = 0; b_hd = 0; b_spd = 0; b_velx = 0.1; b_border = 0;
+b_pos = 0.1; b_hd = 1e0; b_spd = 0.0001; b_velx = 10; b_border = 1e0;
+%b_pos = 0.1; b_hd = 1e0; b_spd = 0.0001; b_velx = 2; b_border = 1e0;
+%b_pos = 0; b_hd = 0; b_spd = 0; b_velx = 0; b_border = 0;
 % start computing the Hessian
 rX = bsxfun(@times,rate,X);       
 hessian_glm = rX'*X;

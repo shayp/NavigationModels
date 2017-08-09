@@ -152,5 +152,3 @@ noModelSelected = false;
 %         noModelSelected = true;
 %     end
 % end
-    LLH_values(:,selected_model)
-    selected_model
