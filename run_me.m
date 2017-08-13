@@ -39,12 +39,13 @@ load (path)
 % sampleRate = sampling rate of neural data and behavioral variable (50Hz)
 Max_Speed_X = 40;
 Max_Speed_Y = 20;
-numPos = 225; numHD = 18; % hardcoded: number of parameters
+numPos = 400; numHD = 12; % hardcoded: number of parameters
 numBorder = 10;
 numVelX = 20;
 numVelY = 20;
 numVel = numVelX * numVelY;
 sampleRate = 8;
+maxDistanceFromBorder = 8;
 % initialize the number of bins that position, head direction, speed, and
 % theta phase will be divided into
 n_pos_bins = sqrt(numPos);

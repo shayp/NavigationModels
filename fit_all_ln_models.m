@@ -12,11 +12,23 @@
 [hdgrid,hdVec, headDirection] = hd_map(headDirection,n_dir_bins);
 
 %Compute border matrix
-[bordergrid, borderBins, border] = border_map([posx posy], n_border_bins, boxSize);
+[bordergrid, borderBins, border] = border_map([posx posy], n_border_bins, boxSize, maxDistanceFromBorder);
 
 % compute veocity matrix
 [velgrid, velx, vely, velXVec, velYVec] = vel_map(posx,posy, numVelX, numVelY, sampleRate, Max_Speed_X, Max_Speed_Y);
 
+
+% too_slow_x = find(velx < 2 & velx > -2);
+% too_slow_y = find(vely < 2 & vely > -2);
+% [too_slow,ia,ib] = intersect(too_slow_x,too_slow_y);
+% numOfSpikesCleaned = length(too_slow);
+% posgrid(too_slow,:) = zeros(numOfSpikesCleaned, n_pos_bins* n_pos_bins);
+% hdgrid(too_slow,:) = zeros(numOfSpikesCleaned, n_dir_bins);
+% velgrid(too_slow,:) = zeros(numOfSpikesCleaned, numVelX * numVelY);
+% bordergrid(too_slow,:) = zeros(numOfSpikesCleaned, n_border_bins);
+% spiketrain(too_slow) = zeros(numOfSpikesCleaned,1);
+% indexesToRemove = too_slow;
+% numOfSpikes = sum(spiketrain)
 %% Fit all 31 LN models
 
 numModels = 15;

@@ -1,4 +1,4 @@
-clear all;
+clear all;  
 numOfNeurons = 92;
 
 for i = 1:numOfNeurons

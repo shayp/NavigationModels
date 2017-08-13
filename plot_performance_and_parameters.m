@@ -9,7 +9,7 @@
 % create x-axis vectors
 hd_vector =  linspace(0, 2 * pi, n_dir_bins);
 velXAxis = linspace(-Max_Speed_X, Max_Speed_X, n_vel_bins);
-velYAxis = linspace(Max_Speed_X, -Max_Speed_X, n_vel_bins);
+velYAxis = linspace(Max_Speed_Y, -Max_Speed_Y, n_vel_bins);
 
 posXAxes = linspace(0, boxSize(1), n_pos_bins);
 posYAxes = linspace(boxSize(2),0, n_pos_bins);
@@ -80,6 +80,8 @@ if  numel(hd_param) == numHD
     subplot(3,4,6)
     plot(hd_vector,hd_response,'k','linewidth',3)
     xlabel('direction angle')
+    axis([0 2*pi -inf inf])
+
     box off
     xlabel('angle ')
     ylabel('Spikes/s');
@@ -141,7 +143,7 @@ box off
 set(gca,'fontsize',10)
 set(gca,'XLim',[0 numModels + 1]); set(gca,'XTick',1:numModels)
 set(gca,'XTickLabel',{'phvb', 'phv', 'phb', 'pvb', 'hvb','ph', 'pv','pb','hv', 'hb', 'vb','p','h','v','b'});
-ylim([(median(LLH_increase_mean) - 3) (median(LLH_increase_mean) + 3)]);
+ylim([(median(LLH_increase_mean) - 1.5) (median(LLH_increase_mean) + 1.5)]);
 %[varExplain, correlation, mse] 
 title(['Neuron ' num2str(neuronNumber) ' - p value: ' num2str(pval_baseline,2) ' Variance explained: ' num2str(varExplain * 100,2) '% R: ' num2str(correlation,2) ' mse: ' num2str(mse,3)]);
 drawnow;

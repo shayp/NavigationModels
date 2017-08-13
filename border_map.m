@@ -1,8 +1,8 @@
-function [bordergrid, borderBins, border] = border_map(pos, nbins, boxSize)
+function [bordergrid, borderBins, border] = border_map(pos, nbins, boxSize, maxDistanceFromBorder)
 xBorder = [0 boxSize(1)];
 yBorder = [0 boxSize(2)];
 
-borderBins = linspace(0, 4, nbins);
+borderBins = linspace(0, maxDistanceFromBorder, nbins);
 % store grid
 bordergrid = zeros(length(pos), nbins);
 border = zeros(length(pos), 1);
@@ -16,7 +16,7 @@ for idx = 1:length(pos)
    lengthFromBorder = min(xBorder, yBorder);
    [~, indexInCurve] = min(abs(lengthFromBorder - borderBins));
    border(idx) = lengthFromBorder;
-   if lengthFromBorder < 4
+   if lengthFromBorder < maxDistanceFromBorder
         bordergrid(idx, indexInCurve) = 1;
    end
 end
