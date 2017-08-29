@@ -14,7 +14,7 @@ velYAxis = linspace(Max_Speed_Y, -Max_Speed_Y, n_vel_bins);
 posXAxes = linspace(0, boxSize(1), n_pos_bins);
 posYAxes = linspace(boxSize(2),0, n_pos_bins);
 % plot the tuning curves
-figure();
+figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 subplot(3,4,1)
 imagesc(posXAxes, fliplr(posYAxes), pos_curve); colorbar
 %set(gca,'YTickLabel',{num2str(posYAxes)})
@@ -45,12 +45,8 @@ ylabel('Spikes/s');
 title('Border tuning curve')
 drawnow;
 %% compute and plot the model-derived response profiles
-if noModelSelected
-    disp(' No model selected :0');
-end
-
 param_selected_model = param{selected_model};
-[varExplain, correlation, mse] =  estimateModelPerformance(spiketrain, A{selected_model}, param_selected_model, dt, filter);
+[varExplain, correlation, mse, smooth_fr_exp, smooth_fr_sim] =  estimateModelPerformance(spiketrain, A{selected_model}, param_selected_model, dt, filter);
 [pos_param,hd_param, vel_param, border_param] = find_param(param_selected_model,modelType{selected_model}, numPos, numHD, numVel, numBorder);
 if numel(pos_param) ~= numPos
     pos_param = 0;
@@ -116,36 +112,16 @@ if numel(border_param) == numBorder
 end
 
 %% compute and plot the model performances
-
-% ordering:
-% pos&hd&spd&theta / pos&hd&spd / pos&hd&th / pos&spd&th / hd&spd&th / pos&hd /
-% pos&spd / pos&th/ hd&spd / hd&theta / spd&theta / pos / hd / speed/ theta
-LLH_values = LLH_values(all(~isnan(LLH_values),2),:);
-LLH_increase_mean = nanmean(LLH_values);
-LLH_increase_sem = std(LLH_values)/sqrt(numFolds);
 subplot(3,4,9:12)
-
-errorbar(LLH_increase_mean,LLH_increase_sem,'ok','linewidth',3)
-hold on
- meanLL = zeros(numModels + 1,1);
-% meanLL = meanLL + median(LLH_increase_mean);
- plot(0.5:numModels + 0.5,meanLL,'--b','linewidth',2)
-
-if noModelSelected
-    plot(selected_model,LLH_increase_mean(selected_model),'.g','markersize',25)
-    legend('Model performance', 'Baseline','Selected model(Not signifcant)', 'Location','bestoutside')
-else
-    plot(selected_model,LLH_increase_mean(selected_model),'.r','markersize',25)
-    legend('Model performance', 'Baseline','Selected model', 'Location','bestoutside')
-end
-hold off
-box off
-set(gca,'fontsize',10)
-set(gca,'XLim',[0 numModels + 1]); set(gca,'XTick',1:numModels)
-set(gca,'XTickLabel',{'phvb', 'phv', 'phb', 'pvb', 'hvb','ph', 'pv','pb','hv', 'hb', 'vb','p','h','v','b'});
-ylim([(median(LLH_increase_mean) - 1.5) (median(LLH_increase_mean) + 1.5)]);
-%[varExplain, correlation, mse] 
-title(['Neuron ' num2str(neuronNumber) ' - p value: ' num2str(pval_baseline,2) ' Variance explained: ' num2str(varExplain * 100,2) '% R: ' num2str(correlation,2) ' mse: ' num2str(mse,3)]);
+timeBins = linspace(dt, length(smooth_fr_exp) * dt,length(smooth_fr_exp));
+plot(timeBins, smooth_fr_exp, timeBins, smooth_fr_sim);
+xlabel('time(s)')
+ylabel('Spikes/s');
+legend('Experiment firing rate', 'GLM Firing rate');
+title(['Neuron - ' num2str(neuronNumber) ' \{Num of spikes: ' num2str(sum(spiketrain))  ' , Variance explained: ' num2str(varExplain * 100,2) '%, R: ' num2str(correlation,2) ', mse: ' num2str(mse,3) '\}']);
 drawnow;
-
-savefig(['./Graphs/TuningCurve_' num2str(neuronNumber)]);
+if correlation >= 0.4 
+savefig(['./Graphs/TuningCurve_sig_' num2str(neuronNumber)]);
+else
+    savefig(['./Graphs/TuningCurve_notSig_' num2str(neuronNumber)]);
+end

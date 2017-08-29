@@ -14,15 +14,21 @@ function [testFit,trainFit,param_mean] = fit_model(A,dt,spiketrain,filter,modelT
 %% Initialize matrices and section the data for k-fold cross-validation
 
 [~,numCol] = size(A);
-numOfSpikes = sum(spiketrain);
-numOfSPikesInSection = floor(numOfSpikes / numFolds);
-cumulativeSikeTrain = cumsum(spiketrain);
-foldStartIndexes = ones(numFolds + 1, 1);
-for i = 1:numFolds - 1
-    indexes = find(cumulativeSikeTrain >= numOfSPikesInSection * i & cumulativeSikeTrain <= numOfSPikesInSection * (i + 1));
-    selectedIndex = 1;
-    foldStartIndexes(i + 1) = indexes(selectedIndex);
-end
+% numOfSpikes = sum(spiketrain);
+% numOfSPikesInSection = floor(numOfSpikes / numFolds);
+% cumulativeSikeTrain = cumsum(spiketrain);
+% foldStartIndexes = ones(numFolds + 1, 1);
+
+sections = numFolds*5;
+
+% divide the data up into 5*num_folds pieces
+edges = round(linspace(1,numel(spiketrain)+1,sections+1));
+
+% for i = 1:numFolds - 1
+%     indexes = find(cumulativeSikeTrain >= numOfSPikesInSection * i & cumulativeSikeTrain <= numOfSPikesInSection * (i + 1));
+%     selectedIndex = 1;
+%     foldStartIndexes(i + 1) = indexes(selectedIndex);
+% end
 foldStartIndexes(numFolds + 1) = length(spiketrain);
 % initialize matrices
 testFit = nan(numFolds,6); % var ex, correlation, llh increase, mse, # of spikes, length of test data
@@ -33,9 +39,15 @@ paramMat = nan(numFolds,numCol);
 for k = 1:numFolds
     fprintf('\t\t- Cross validation fold %d of %d\n', k, numFolds);
     
-    % get test data from edges - each test data chunk comes from entire session
-    test_ind  = foldStartIndexes(k):(foldStartIndexes(k + 1) - 1);
-    train_ind = setdiff(1:numel(spiketrain), test_ind);
+        % get test data from edges - each test data chunk comes from entire session
+        test_ind  = [edges(k):edges(k+1)-1 edges(k+numFolds):edges(k+numFolds+1)-1 ...
+        edges(k+2*numFolds):edges(k+2*numFolds+1)-1 edges(k+3*numFolds):edges(k+3*numFolds+1)-1 ...
+        edges(k+4*numFolds):edges(k+4*numFolds+1)-1]   ;
+        train_ind = setdiff(1:numel(spiketrain),test_ind);
+
+%     % get test data from edges - each test data chunk comes from entire session
+%     test_ind  = foldStartIndexes(k):(foldStartIndexes(k + 1) - 1);
+%     train_ind = setdiff(1:numel(spiketrain), test_ind);
     test_spikes = spiketrain(test_ind); %test spiking
     smooth_spikes_test = conv(test_spikes,filter,'same'); %returns vector same size as original
     smooth_fr_test = smooth_spikes_test./dt;
@@ -78,12 +90,11 @@ for k = 1:numFolds
     r = exp(liniearProjection); n = test_spikes; meanFR_test = nanmean(test_spikes); 
 
     if sum(n) == 0
-%         log_llh_test_model = nansum(r-n.*liniearProjection); %note: log(gamma(n+1)) will be unstable if n is large (which it isn't here)
-%         log_llh_test_mean = nansum(meanFR_test - n.*log2(meanFR_test));
         log_llh_test = NaN;
     else
-        log_llh_test_model = nansum(r-n.* liniearProjection + log(factorial(n)))/sum(n); %note: log(gamma(n+1)) will be unstable if n is large (which it isn't here)
-        log_llh_test_mean = nansum(meanFR_test-n.*log(meanFR_test) + log(factorial(n)))/sum(n);
+        log_llh_test_model = nansum(r-n.*log2(r) + log2(factorial(n)))/sum(n); %note: log(gamma(n+1)) will be unstable if n is large (which it isn't here)
+        log_llh_test_mean = nansum(meanFR_test-n.*log2(meanFR_test) + log2(factorial(n)))/sum(n);
+
         log_llh_test = (-log_llh_test_model + log_llh_test_mean);
     end
     
@@ -114,7 +125,6 @@ for k = 1:numFolds
     
     % compute MSE
     mse_train = nanmean((smooth_fr_hat_train-smooth_fr_train).^2);
-    
     trainFit(k,:) = [varExplain_train correlation_train log_llh_train mse_train sum(n_train) numel(train_ind)];
     if sum(n) ~= 0
         % save the parameters
