@@ -7,8 +7,13 @@ for i = 1:numOfNeurons
     GetNeuronStatistics(['./rawDataForLearning/data_for_cell_' num2str(i)]);
 end
 
-%%
+%% Building featurs
 for i = 1:numOfNeurons
     disp(['************************ Neuron ' num2str(i) ' ************************']);
-    run_me(['./rawDataForLearning/data_for_cell_' num2str(i)], i);
+    run_me(['./rawDataForLearning/data_for_cell_' num2str(i)], i, 0, ['../NeuralNetwork/rawDataForLearning/params_for_cell_' num2str(i)]);
+end
+%% Learning
+for i = 1:1
+    disp(['************************ Neuron ' num2str(i) ' ************************']);
+    run_me(['./rawDataForLearning/data_for_cell_' num2str(i)], i, 1);
 end

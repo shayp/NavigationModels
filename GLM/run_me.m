@@ -1,5 +1,5 @@
 %% Description of run_me
-function run_me(path, neuronNumber)
+function run_me(path, neuronNumber, fLearn, saveParamsPath)
 % This script is segmented into several parts. First, the data (an
 % example cell) is loaded. Then, 15 LN models are fit to the
 % cell's spike train. Each model uses information about 
@@ -19,55 +19,37 @@ function run_me(path, neuronNumber)
 
 
 %% Clear the workspace and load the data
-
-
 % load the data
-fprintf('(1/5) Loading data from example cell \n')
+fprintf('(1/7) Loading data from example cell \n')
 load (path)
 if(sum(spiketrain) < 40)
     disp('Not enougth spiking neurons');
     return;
 end
-% description of variables included:
-% boxSize = length (in cm) of one side of the square box
-% post = vector of time (seconds) at every 20 ms time bin
-% spiketrain = vector of the # of spikes in each 20 ms time bin
-% posx = x-position of left LED every 20 ms
-% posx2 = x-position of right LED every 20 ms
-% posx_c = x-position in middle of LEDs
-% posy = y-position of left LED every 20 ms
-% posy2 = y-posiiton of right LED every 20 ms
-% posy_c = y-position in middle of LEDs
-% filt_eeg = local field potential, filtered for theta frequency (4-12 Hz)
-% eeg_sample_rate = sample rate of filt_eeg (250 Hz)
-% sampleRate = sampling rate of neural data and behavioral variable (50Hz)
-Max_Speed_X = 40;
-Max_Speed_Y = 20;
-numPos = 100; numHD = 10; % hardcoded: number of parameters
-numBorder = 10;
-numVelX = 25;
-numVelY = 25;
-numVel = numVelX * numVelY;
-sampleRate = 8;
-maxDistanceFromBorder = 7;
-% initialize the number of bins that position, head direction, speed, and
-% theta phase will be divided into
-n_pos_bins = sqrt(numPos);
-n_dir_bins = numHD;
-n_vel_bins = sqrt(numVel);
-n_border_bins = numBorder;
-%% fit the model
-fprintf('(2/5) Fitting all linear-nonlinear (LN) models\n')
-fit_all_ln_models
+%% Define parameters
+fprintf('(2/7) define global params\n')
 
-%% find the simplest model that best describes the spike train
-fprintf('(3/5) Performing forward model selection\n')
-select_best_model
+defineParameters
+%% Build featureMaps
+fprintf('(3/7) build feature maps\n')
+buildFeatureMaps
 
-%% Compute the firing-rate tuning curves
-fprintf('(4/5) Computing tuning curves\n')
-compute_all_tuning_curves
+%% Learning
+if (fLearn == 1)
+    % fit the model
+    fprintf('(4/7) Fitting all linear-nonlinear (LN) models\n')
+    fit_all_ln_models
 
-%% plot the results
-fprintf('(5/5) Plotting performance and parameters\n') 
-plot_performance_and_parameters
+    % find the simplest model that best describes the spike train
+    fprintf('(5/7) Performing forward model selection\n')
+    select_best_model
+
+    % Compute the firing-rate tuning curves
+    fprintf('(6/7) Computing tuning curves\n')
+    compute_all_tuning_curves
+
+    % plot the results
+    fprintf('(7/7) Plotting performance and parameters\n') 
+    plot_performance_and_parameters
+end
+end
