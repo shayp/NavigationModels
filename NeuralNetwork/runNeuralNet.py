@@ -19,22 +19,22 @@ def runNeuralNet(xVecotr, yVector):
     y_train = yVector
 
     batchSize = y_train.size
-    #batchSize = 128
     model = Sequential()
 
     model.add(LSTM(32, input_dim = 6))
     model.add(Dense(64, activation='tanh', init='uniform'))
+    model.add(Dense(16, activation='tanh', init='uniform'))
     model.add(Dense(1, activation='tanh', init='uniform'))
     model.compile(loss='mean_squared_error',
                   optimizer='adam',
                   metrics=['accuracy'])
 
     history =  model.fit(x_train, y_train,
-              epochs=1000,shuffle=True,validation_split = 0.3,
+              epochs=500,shuffle=False,validation_split = 0.3,
               batch_size=batchSize, verbose = 1)
 
     yhat = model.predict_on_batch(xVecotr)
-
+    yhat[np.where(yhat < 0)] = 0
     gaus = sp.signal.gaussian(7,1)
     gaus = gaus / sum(gaus)
     gaus = gaus.reshape((7,1))
