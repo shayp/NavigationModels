@@ -22,7 +22,7 @@ function run_me(path, neuronNumber, fLearn, saveParamsPath)
 % load the data
 fprintf('(1/7) Loading data from example cell \n')
 load (path)
-if(sum(spiketrain) < 40)
+if(sum(spiketrain) < 30)
     disp('Not enougth spiking neurons');
     return;
 end

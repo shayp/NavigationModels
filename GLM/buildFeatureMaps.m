@@ -9,4 +9,5 @@
 
 % compute veocity matrix
 [velgrid, velx, vely, velXVec, velYVec] = vel_map(posx,posy, numVelX, numVelY, sampleRate, Max_Speed_X, Max_Speed_Y);
-save(saveParamsPath, 'posx', 'posy', 'boxSize', 'headDirection', 'border','velx', 'vely', 'sampleRate', 'spiketrain');
+save(saveParamsPath, 'posx', 'posy', 'boxSize', 'headDirection', 'border','velx',...
+    'vely', 'sampleRate', 'spiketrain', 'posgrid', 'xBins', 'yBins', 'hdgrid', 'hdVec', 'bordergrid', 'borderBins', 'velgrid', 'velXVec', 'velYVec','neuronNumber');

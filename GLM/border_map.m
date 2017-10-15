@@ -1,4 +1,5 @@
 function [bordergrid, borderBins, border] = border_map(pos, nbins, boxSize, maxDistanceFromBorder)
+
 xBorder = [0 boxSize(1)];
 yBorder = [0 boxSize(2)];
 

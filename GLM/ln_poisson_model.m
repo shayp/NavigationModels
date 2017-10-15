@@ -10,7 +10,7 @@ rate = exp(u);
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
 %b_pos = 0.5; b_hd = 1e0;  b_vel = 0.5; b_border = 1e0;
-b_pos = 0.5; b_hd = 1e0;  b_vel = 0.5; b_border = 1e0;
+b_pos = 0.5; b_hd = 1e0;  b_vel = 0.001; b_border = 1e0;
 
 %b_pos = 0; b_hd = 0;  b_vel = 0; b_border = 0;
 % start computing the Hessian

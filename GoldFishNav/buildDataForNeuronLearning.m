@@ -34,7 +34,13 @@ for i = 1:length(SpikeTime)
     spiketrain(wantedIndex) = spiketrain(wantedIndex) + 1;
 end
 % figure();
-
-save(['../rawDataForLearning/data_for_cell_' num2str(neuronNumber)], 'boxSize', 'post', 'SpikeTime', 'posx', 'posy', 'sampleRate', 'headDirection', 'spiketrain');
+spikedIndexes = find(spiketrain);
+firstindex = max(spikedIndexes(1) - 10, 1);
+lastIndex = min(lengthOfExp, spikedIndexes(end) + 10);
+spiketrain = spiketrain(firstindex:lastIndex);
+posx = posx(firstindex:lastIndex);
+posy = posy(firstindex:lastIndex);
+headDirection = headDirection(firstindex:lastIndex);
+save(['../GLM/rawDataForLearning/data_for_cell_' num2str(neuronNumber)], 'boxSize', 'post', 'SpikeTime', 'posx', 'posy', 'sampleRate', 'headDirection', 'spiketrain');
 % plot(diff(ChoosedNeuron.Time));
 end

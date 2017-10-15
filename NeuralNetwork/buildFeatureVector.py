@@ -1,4 +1,4 @@
 import numpy as np
-def buildFeatureVector(posX, posY, velX, velY, headDirection, distanceFromBorder):
-    x = np.concatenate((posX, posY, velX, velY, headDirection, distanceFromBorder), axis=1)
+def buildFeatureVector(positionFeatures, velocityFeatures, headDirectionFeatures,borderFeatures):
+    x = np.concatenate((positionFeatures, velocityFeatures, headDirectionFeatures,borderFeatures), axis=1)
     return x
