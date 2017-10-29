@@ -13,14 +13,14 @@
 % the model indexing scheme:
 % phs, ph, ps, hs, p,  h,  s
 % 1      2    3    4    5    6  7   8   9   10  11  12  13  14  15
-
+function [top1, selectedModel] = selectBestModel(testFit,numFolds, numModels)
 
 testFit_mat = cell2mat(testFit);
 
 ll_values = reshape(testFit_mat(:,3),numFolds,numModels);
 
 % 
-[~, selected_model] = max(nanmean(ll_values,1));
+[~, selectedModel] = max(nanmean(ll_values,1));
 % % find the best single model
 singleModels = 12:15;
 [~,top1] = max(nanmean(ll_values(:,singleModels))); top1 = top1 + singleModels(1)-1;
@@ -75,14 +75,15 @@ end
 if p_LL_12 < 0.05 % double model is sig. better
     if p_LL_23 < 0.05  % triple model is sig. better
         if p_LL_34 < 0.05
-            selected_model = top4;             
+            selectedModel = top4;             
         else
-            selected_model = top3;
+            selectedModel = top3;
         end
     else
-        selected_model = top2;
+        selectedModel = top2;
     end
 else
-    selected_model = top1;
+    selectedModel = top1;
 end
 
+end

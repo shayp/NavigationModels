@@ -1,5 +1,5 @@
 
-for i = 501:517
+for i = 506:507
     moserBuildDataForLearning(i)
 end
     

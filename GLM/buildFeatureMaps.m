@@ -1,13 +1,14 @@
+function [features] = buildFeatureMaps(config, learningData)
 % compute position matrix
-[posgrid, xBins, yBins] = pos_map([posx posy], n_pos_bins, boxSize);
+[features.posgrid, features.xBins, features.yBins] = pos_map([learningData.posx learningData.posy], config.numOfPositionAxisParams, config.boxSize);
 
 % compute head direction matrix
-[hdgrid,hdVec, headDirection] = hd_map(headDirection,n_dir_bins);
+[features.hdgrid, features.hdVec] = hd_map(learningData.headDirection, config.numOfHeadDirectionParams);
 
 %Compute border matrix
-[bordergrid, borderBins, border] = border_map([posx posy], n_border_bins, boxSize, maxDistanceFromBorder);
+[features.bordergrid, features.borderBins, features.distanceFromBorder] = border_map([learningData.posx learningData.posy], config.numOfDistanceFromBorderParams, config.boxSize, config.maxDistanceFromBorder);
 
 % compute veocity matrix
-[velgrid, velx, vely, velXVec, velYVec] = vel_map(posx,posy, numVelX, numVelY, sampleRate, Max_Speed_X, Max_Speed_Y);
-save(saveParamsPath, 'posx', 'posy', 'boxSize', 'headDirection', 'border','velx',...
-    'vely', 'sampleRate', 'spiketrain', 'posgrid', 'xBins', 'yBins', 'hdgrid', 'hdVec', 'bordergrid', 'borderBins', 'velgrid', 'velXVec', 'velYVec','neuronNumber');
+[features.velgrid, features.velx, features.vely, features.velXVec, features.velYVec] = vel_map(learningData.posx,learningData.posy, config.numOfVelocityAxisParams, config.numOfVelocityAxisParams, config.sampleRate, config.maxVelocityXAxis, config.maxVelocityYAxis);
+
+end

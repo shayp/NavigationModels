@@ -1,4 +1,4 @@
-function [hd_grid,dirVec, headDirection] = hd_map(headDirection,nbins)
+function [hd_grid,dirVec] = hd_map(headDirection,nbins)
 
 hd_grid = zeros(length(headDirection),nbins);
 dirVec = linspace(0, 2 * pi, nbins);

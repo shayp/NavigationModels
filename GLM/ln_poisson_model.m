@@ -1,11 +1,20 @@
-function [f, df, hessian] = ln_poisson_model(param,data,modelType, numPos, numHD, numVel, numBorder)
+function [f, df, hessian] = ln_poisson_model(param,data,modelType, config, numOfCouplingParams)
 
-X = data{1}; % subset of A
-Y = data{2}; % number of spikes
+tuningFeatures = data{1}; % subset of A
+designMatrix = data{2};
+spikeTrain = data{3}; % number of spikes
+biasParam = param(1);
 
-% compute the firing rate
-u = X * param;
-rate = exp(u);
+if config.fCoupling
+   spikeHistoryParam = param(2:1 + numOfCouplingParams); 
+   tuningParams = param(2 + numOfCouplingParams:end);
+   linerProjection = tuningFeatures * tuningParams + designMatrix * spikeHistoryParam + biasParam;
+else
+    tuningParams = param(2:end);
+    linerProjection = tuningFeatures * tuningParams + biasParam;
+end
+
+rate = exp(linerProjection);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
@@ -14,8 +23,29 @@ b_pos = 0.5; b_hd = 1e0;  b_vel = 0.001; b_border = 1e0;
 
 %b_pos = 0; b_hd = 0;  b_vel = 0; b_border = 0;
 % start computing the Hessian
-rX = bsxfun(@times,rate,X);       
-hessian_glm = rX'*X;
+
+dlTuningParams = tuningFeatures' * (rate - spikeTrain);
+dlBias = sum(rate) - sum(spikeTrain);
+dlHistory = [];
+if config.fCoupling
+    dlHistory = designMatrix' * (rate - spikeTrain);
+end
+
+ratediag = spdiags(rate,0, length(spikeTrain), length(spikeTrain));
+
+HTuning = (tuningFeatures' * (bsxfun(@times,tuningFeatures,rate))); 
+HBias = sum(rate);
+HTuningBias = (sum(ratediag,1) * tuningFeatures)';
+
+if config.fCoupling
+    HHistory = (designMatrix' * (bsxfun(@times,designMatrix,rate)));
+    HTuningHistory = ((designMatrix' * ratediag) * tuningFeatures)';
+    HHistoryBias = (rate' * designMatrix)';
+else
+    HHistory = [];
+    HTuningHistory = [];
+    HHistoryBias = [];
+end
 
 %% find the P, H, S, or T parameters and compute their roughness penalties
 
@@ -25,7 +55,7 @@ J_hd = 0; J_hd_g = []; J_hd_h = [];
 J_vel = 0; J_vel_g = []; J_vel_h = [];  
 J_border = 0; J_border_g = []; J_border_h = [];  
 % find the parameters
-[param_pos,param_hd,param_vel, param_border] = find_param(param,modelType,numPos,numHD, numVel, numBorder);
+[param_pos,param_hd,param_vel, param_border] = find_param(tuningParams, modelType, config.numOfPositionParams,config.numOfHeadDirectionParams, config.numOfVelocityParams, config.numOfDistanceFromBorderParams);
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
@@ -46,9 +76,11 @@ if ~isempty(param_border)
 end
 
 %% compute f, the gradient, and the hessian 
-f = sum(rate-Y.*u) + J_pos + J_hd + J_vel + J_border;
-df = real(X' * (rate - Y) + [J_pos_g; J_hd_g; J_vel_g; J_border_g]);
-hessian = hessian_glm + blkdiag(J_pos_h,J_hd_h, J_vel_h, J_border_h);
+f = sum(rate-spikeTrain.*linerProjection) + J_pos + J_hd + J_vel + J_border;
+dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_vel_g; J_border_g];
+df = [dlBias; dlHistory; dlTuningParams];
+HTuning = HTuning + blkdiag(J_pos_h,J_hd_h, J_vel_h, J_border_h);
+hessian = [[HBias HHistoryBias' HTuningBias']; [HHistoryBias HHistory HTuningHistory']; [HTuningBias HTuningHistory HTuning]];
 
 
 %% smoothing functions called in the above script

@@ -1,17 +1,22 @@
 function [vel_grid, velx, vely, velXVec, velYVec] = vel_map(posx,posy,nVelXBins, nVelYBins, sampleRate, maxSpeedX, maxSpeedY)
 
 numOfBins = nVelXBins * nVelYBins;
+
+% add the extra just to make the vectors the same size
 velx = diff([posx(1); posx]);
-vely = diff([posy(1); posy]); % add the extra just to make the vectors the same size
+vely = diff([posy(1); posy]); 
 
 velx = velx * sampleRate;
+vely = vely * sampleRate;
+
+% Remove high and low speed
 velx(velx > maxSpeedX) = maxSpeedX;
 velx(velx < -maxSpeedX) = -maxSpeedX;
-
-vely = vely * sampleRate;
 vely(vely > maxSpeedY) = maxSpeedY;
 vely(vely < -maxSpeedY) = -maxSpeedY;
 
+
+% Create discrete bins
 velXVec = linspace(-maxSpeedX, maxSpeedX, nVelXBins);
 velYVec = linspace(-maxSpeedY, maxSpeedY, nVelYBins);
 
