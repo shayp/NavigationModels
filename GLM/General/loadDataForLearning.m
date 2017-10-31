@@ -32,10 +32,16 @@ config.lastPeakHistory = 0.075;
 config.bForHistory = config.dt * 5;
 config.lastPeakCoupling = 0.025;
 config.bForCoupling = config.dt * 5;
-config.numOfRepeats = 40;
+config.numOfRepeats = 10;
+
+% compute a filter, which will be used to smooth the firing rate
+filter = gaussmf(-4:4,[2 0]);
+filter = filter/sum(filter); 
+config.filter = filter;
+
 load([folderPath num2str(neuronNumber)]);
 
-maxBins = ceil(length(posx) * 0.2);
+maxBins = ceil(length(posx) * 0.6);
 
 % Get position, head direction and spike train data of the neuron we want to
 % learn

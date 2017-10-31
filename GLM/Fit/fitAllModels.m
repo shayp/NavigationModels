@@ -2,7 +2,7 @@
 % The model: r = exp(W*theta), where r is the predicted # of spikes, W is a
 % matrix of one-hot vectors describing variable (P, H, S, or T) values, and
 % theta is the learned vector of parameters.
-function [numModels, testFit, trainFit, param, smooth_fr, Models,modelType, filter] = fitAllModels(learnedParameters, config, features, fCoupling)
+function [numModels, testFit, trainFit, param, Models,modelType] = fitAllModels(learnedParameters, config, features, fCoupling)
 
 %% Fit all 15 LN models
 posgrid = features.posgrid;
@@ -58,13 +58,6 @@ Models{13} = [hdgrid];
 Models{14} = [velgrid];
 Models{15} = [bordergrid];
 
-% compute a filter, which will be used to smooth the firing rate
-filter = gaussmf(-4:4,[2 0]);
-filter = filter/sum(filter); 
-
-dt = config.dt;
-fr = learnedParameters.spiketrain/dt;
-smooth_fr = conv(fr,filter,'same');
 
 % compute the number of folds we would like to do
 numFolds = config.numFolds;
@@ -72,5 +65,5 @@ numFolds = config.numFolds;
 for n = 1:numModels
     fprintf('\t- Fitting model %d of %d\n', n, numModels);
     [testFit{n},trainFit{n},param{n}] = fit_model(Models{n},  learnedParameters.spiketrain, ...
-        filter, modelType{n}, numFolds, config, features.designMatrix);
+        config.filter, modelType{n}, numFolds, config, features.designMatrix);
 end

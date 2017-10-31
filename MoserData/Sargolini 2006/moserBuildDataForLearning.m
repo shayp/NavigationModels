@@ -42,10 +42,12 @@ spiketrain = double(ismember(1:lengthOfExp, spikeTimes))';
 % figure();
  spikedInd = find(spiketrain);
  length(spikedInd)
-% 
-% plot(posx, posy, posx(spikedInd), posy(spikedInd), '*');
-% xlim([0 100]);
-% ylim([0 100]);
-% savefig(['./trajectory_neuron_' num2str(neuronNumber)]);
+
+plot(posx, posy, posx(spikedInd), posy(spikedInd), '*');
+title(['neuron: ' num2str(neuronNumber)]);
+xlim([0 100]);
+ylim([0 100]);
+drawnow;
+savefig(['./trajectory_neuron_' num2str(neuronNumber)]);
 save(['../../GLM/rawDataForLearning/data_for_cell_' num2str(neuronNumber)], 'boxSize', 'post', 'posx', 'posy', 'sampleRate', 'headDirection', 'spiketrain');
 end

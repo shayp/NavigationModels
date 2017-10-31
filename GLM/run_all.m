@@ -3,9 +3,9 @@
 folderPath = 'C:\projects\NavigationModels\dummyCheck\';
 configFilePath = [folderPath 'config'];
 filePath = [folderPath 'data_for_cell_'];
-fCoupling = 0;
+fCoupling = 1;
 coupledNeurons = [];
-for neuronNumber = 502:502
+for neuronNumber = 510:510
 
     neuronNumber
 [config, learningData, features, numModels, testFit, trainFit, param] =...

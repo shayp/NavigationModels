@@ -1,5 +1,6 @@
 
-for i = 506:507
+for i = 501:517
+    figure();
     moserBuildDataForLearning(i)
 end
     

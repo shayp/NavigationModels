@@ -14,11 +14,11 @@ velYAxis = linspace(config.maxVelocityYAxis, -config.maxVelocityYAxis, config.nu
 
 posXAxes = linspace(0, config.boxSize(1), config.numOfPositionAxisParams);
 posYAxes = linspace(config.boxSize(2),0, config.numOfPositionAxisParams);
-
+borderBins = linspace(0, config.maxDistanceFromBorder, config.numOfDistanceFromBorderParams);
 figure();
 if numel(modelParams.pos_param) == config.numOfPositionParams
     currentIndex = currentIndex + 1;
-    scale_factor_pos = exp(modelParams.biasParam)*mean(exp(modelParams.hd_param))*mean(exp(modelParams.vel_param))*mean(exp(border_param));
+    scale_factor_pos = exp(modelParams.biasParam)*mean(exp(modelParams.hd_param))*mean(exp(modelParams.vel_param))*mean(exp(modelParams.border_param));
     pos_response = scale_factor_pos*exp(modelParams.pos_param) / config.dt;
     subplot(numOfRows,2,currentIndex)
     imagesc(posXAxes, fliplr(posYAxes),reshape(pos_response,config.numOfPositionAxisParams,config.numOfPositionAxisParams)); axis on; colorbar;

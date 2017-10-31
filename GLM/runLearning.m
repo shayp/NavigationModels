@@ -1,5 +1,8 @@
 function [config, learningData, features, numModels, testFit, trainFit, param] = runLearning(data_path, neuronNumber, configFilePath, fCoupling, coupledNeurons)
-
+addpath('General');
+addpath('featureMaps');
+addpath('Fit');
+addpath('BuildPlots');
 if fCoupling == 0
     numOfCoupledNeurons = 0;
 else
@@ -24,8 +27,12 @@ end
 
 features.designMatrix = designMatrix;
 
+psth =  computePSTH(learningData.spiketrain, config.windowSize) / config.dt;
+
+smooth_fr = conv(psth, config.filter, 'same');
+
 % Fit model
-[numModels, testFit, trainFit, param, smooth_fr,  Models,modelType, filter] = ...
+[numModels, testFit, trainFit, param, Models,modelType] = ...
     fitAllModels(learningData, config, features, fCoupling);
 
 % Select best models
