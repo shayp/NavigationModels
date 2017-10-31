@@ -108,7 +108,7 @@ for k = 1:numFolds
     correlation_test = corr(smooth_fr_test,smooth_fr_hat_test,'type','Pearson');
     
     % compute llh increase from "mean firing rate model" - NO SMOOTHING
-    test_ll = ln_poisson_model(param,testData,modelType, config, numOfCouplingParams);
+    test_ll = -1 * ln_poisson_model(param,testData,modelType, config, numOfCouplingParams);
     
     % compute MSE
     mse_test = nanmean((smooth_fr_hat_test-smooth_fr_test).^2);
@@ -135,7 +135,7 @@ for k = 1:numFolds
     correlation_train = corr(smooth_fr_train,smooth_fr_hat_train,'type','Pearson');
     
     % compute log-likelihood
-    train_ll = ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
+    train_ll = -1 * ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
 
     
     % compute MSE

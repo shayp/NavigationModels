@@ -41,7 +41,7 @@ smooth_fr = conv(psth, config.filter, 'same');
 
 % Get experiment tuning curves
 [pos_curve, hd_curve, vel_curve, border_curve] = ...
-    computeTuningCurves(learningData, features, config, smooth_fr);
+    computeTuningCurves(learningData, features, config, learningData.spiketrain);
 
 % Plot experiment tuning curve
 plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber);
@@ -62,7 +62,7 @@ validationStimulusSelected = getStimulusByModelNumber(selectedModel, validationF
 % Get Single model perfomace and parameters
 [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI] = ...
     getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSelected, param{selectedModel},...
-    modelType{selectedModel}, filter, numOfCoupledNeurons, validationCouplingData, learningData.historyBaseVectors, learningData.couplingBaseVectors);
+    modelType{selectedModel}, config.filter, numOfCoupledNeurons, validationCouplingData, learningData.historyBaseVectors, learningData.couplingBaseVectors);
 
 % plot results
 plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
