@@ -22,7 +22,7 @@ config.sampleRate = 1000;
 config.dt = 1/1000;
 config.psthdt = 1/1000 * config.windowSize;
 
-config.numFolds = 2;
+config.numFolds = 10;
 config.numModels = 15;
 
 % History and coupling config
@@ -32,7 +32,7 @@ config.lastPeakHistory = 0.075;
 config.bForHistory = config.dt * 5;
 config.lastPeakCoupling = 0.025;
 config.bForCoupling = config.dt * 5;
-config.numOfRepeats = 40;
+config.numOfRepeats = 1;
 
 % compute a filter, which will be used to smooth the firing rate
 filter = gaussmf(-4:4,[2 0]);
@@ -41,7 +41,7 @@ config.filter = filter;
 
 load([folderPath num2str(neuronNumber)]);
 
-maxBins = ceil(length(posx) * 0.2);
+maxBins = ceil(length(posx) * 0.1);
 
 % Get position, head direction and spike train data of the neuron we want to
 % learn

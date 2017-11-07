@@ -21,5 +21,5 @@ for idx = 1:length(pos)
         bordergrid(idx, indexInCurve) = 1;
    end
 end
-
+bordergrid = sparse(bordergrid);
 end

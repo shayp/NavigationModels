@@ -31,5 +31,5 @@ for i = 1:numel(posx)
     bin_idx = sub2ind([nVelYBins nVelXBins],nVelYBins  - ycoor + 1, xcoor);
     vel_grid(i, bin_idx) = 1;
 end
-
+vel_grid = sparse(vel_grid);
 return

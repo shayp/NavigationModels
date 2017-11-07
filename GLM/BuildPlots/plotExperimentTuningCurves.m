@@ -10,6 +10,7 @@ posYAxes = linspace(config.boxSize(2),0, config.numOfPositionAxisParams);
 figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 subplot(2,2,1)
 imagesc(posXAxes, fliplr(posYAxes), pos_curve); colorbar
+colormap jet;
 %set(gca,'YTickLabel',{num2str(posYAxes)})
 title('Experiment position curve')
 xlabel('X Dim(cms)')
@@ -25,6 +26,7 @@ title('Experiment head direction curve')
 
 subplot(2,2,3)
 imagesc(velXAxis, fliplr(velYAxis), vel_curve); colorbar
+colormap jet;
 %set(gca,'YTickLabel',{num2str(velYAxis)})
 title('Experiment Velocity curve');
 xlabel('dx/dt(cm/s)')

@@ -10,5 +10,5 @@ for i = 1:numel(headDirection)
     hd_grid(i,idx) = 1;
   
 end
-
+hd_grid = sparse(hd_grid);
 return

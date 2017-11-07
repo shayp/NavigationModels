@@ -18,6 +18,10 @@ Models = cell(numModels,1);
 modelType = cell(numModels,1);
 
 % ALL VARIABLES
+size(posgrid)
+size(hdgrid)
+size(velgrid)
+size(bordergrid)
 Models{1} = [posgrid hdgrid velgrid bordergrid];
 modelType{1} = [1 1 1 1];
 

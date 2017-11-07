@@ -27,9 +27,15 @@ end
 
 features.designMatrix = designMatrix;
 
-psth =  computePSTH(learningData.spiketrain, config.windowSize) / config.dt;
+smooth_fr = conv(learningData.spiketrain, config.filter, 'same');
 
-smooth_fr = conv(psth, config.filter, 'same');
+% Get experiment tuning curves
+[pos_curve, hd_curve, vel_curve, border_curve] = ...
+    computeTuningCurves(learningData, features, config, smooth_fr);
+
+% Plot experiment tuning curve
+plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber);
+
 
 % Fit model
 [numModels, testFit, trainFit, param, Models,modelType] = ...
@@ -39,12 +45,6 @@ smooth_fr = conv(psth, config.filter, 'same');
 [topSingleCurve, selectedModel] = ...
     selectBestModel(testFit,config.numFolds, numModels);
 
-% Get experiment tuning curves
-[pos_curve, hd_curve, vel_curve, border_curve] = ...
-    computeTuningCurves(learningData, features, config, learningData.spiketrain);
-
-% Plot experiment tuning curve
-plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber);
 
 % validationStimulusSingle = getStimulusByModelNumber(topSingleCurve, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.velgrid, validationFeatures.bordergrid);
 % % Get Single model perfomace and parameters

@@ -15,5 +15,5 @@ for idx = 1:length(pos)
     posgrid(idx, bin_idx) = 1;
     
 end
-
+posgrid = sparse(posgrid);
 end
