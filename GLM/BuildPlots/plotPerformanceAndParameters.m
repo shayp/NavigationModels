@@ -23,6 +23,7 @@ if numel(modelParams.pos_param) == config.numOfPositionParams
     subplot(numOfRows,2,currentIndex)
     imagesc(posXAxes, fliplr(posYAxes),reshape(pos_response,config.numOfPositionAxisParams,config.numOfPositionAxisParams)); axis on; colorbar;
     title('Learned position curve');
+    colormap jet;
     xlabel('X Dim(cms)')
     ylabel('Y Dim(cms)')
 end
@@ -52,6 +53,7 @@ if numel(modelParams.vel_param) == config.numOfVelocityParams
     subplot(numOfRows,2,currentIndex)
     imagesc(velXAxis, fliplr(velYAxis),reshape(vel_response, config.numOfVelocityAxisParams, config.numOfVelocityAxisParams)); axis on; colorbar;
     title('Learned velocity curve');
+    colormap jet;
     xlabel('dx/dt(cm/s)')
     ylabel('dy/dt(cm/s)')
     box off

@@ -17,13 +17,14 @@ function [top1, selectedModel] = selectBestModel(testFit,numFolds, numModels)
 
 testFit_mat = cell2mat(testFit);
 
-corr_values = reshape(testFit_mat(:,3),numFolds,numModels);
+corr_values = reshape(testFit_mat(:,2),numFolds,numModels);
 
 % 
-[~, selectedModel] = max(nanmean(corr_values,1));
+[~, selectedModel] = max(nanmean(corr_values,1))
 % % find the best single model
 singleModels = 12:15;
-[~,top1] = max(nanmean(corr_values(:,singleModels))); top1 = top1 + singleModels(1)-1;
+[~,top1] = max(nanmean(corr_values(:,singleModels))) 
+top1 = top1 + singleModels(1)-1;
 % 
 % % find the best double model that includes the single model
  if top1 == 12 % P -> PH, PV, PB
@@ -70,18 +71,18 @@ corr4 = corr_values(:,top4);
  [p_corr_23,~] = signrank(corr3,corr2,'tail','right');
  [p_corr_34,~] = signrank(corr4,corr3,'tail','right');
 
-if p_corr_12 < 0.05 % double model is sig. better
-    if p_corr_23 < 0.05  % triple model is sig. better
-        if p_corr_34 < 0.05
-            selectedModel = top4;             
-        else
-            selectedModel = top3;
-        end
-    else
-        selectedModel = top2;
-    end
-else
-    selectedModel = top1;
-end
+% if p_corr_12 < 0.05 % double model is sig. better
+%     if p_corr_23 < 0.05  % triple model is sig. better
+%         if p_corr_34 < 0.05
+%             selectedModel = top4;             
+%         else
+%             selectedModel = top3;
+%         end
+%     else
+%         selectedModel = top2;
+%     end
+% else
+%     selectedModel = top1;
+% end
 
 end

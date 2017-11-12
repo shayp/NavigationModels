@@ -1,6 +1,6 @@
 function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI] = ...
     getModelMetricsAndParameters(config, spiketrain, stimulus, modelParams,...
-    modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors)
+    modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors, validationDesignMatrix)
 
 numOfFilters = 5;
 
@@ -44,13 +44,18 @@ for i = 1:config.numOfRepeats
     simISI = [simISI diff(find(modelFiringRate(:,i)))'];
 end
 
-summedFiringRate = sum(modelFiringRate,2) / config.numOfRepeats;
+%summedFiringRate = sum(modelFiringRate,2) / config.numOfRepeats;
+summedFiringRate = stimulus * tuningParams' + learnedParams.biasParam;
 
+if config.fCoupling
+   summedFiringRate = summedFiringRate +  validationDesignMatrix * modelParams(2:1 + config.numOfHistoryParams)';
+end
+summedFiringRate = exp(summedFiringRate);
 % Get psth and metrics 
 [metrics, smoothPsthExp, smoothPsthSim, ISI] = ...
     estimateModelPerformance(config.dt, spiketrain, summedFiringRate, filter, config.windowSize);
 
-maxSimISI = max(simISI);
+maxSimISI = max(max(simISI), 2* config.dt);
 simISIPr = zeros(maxSimISI, 1);
 for j = 1:maxSimISI
     simISIPr(j) = sum(simISI == j);

@@ -15,24 +15,24 @@ config.maxVelocityYAxis = maxVelocityYAxis;
 config.boxSize = boxSize;
 config.maxDistanceFromBorder = maxDistanceFromBorder;
 
-config.windowSize = 20;
+config.windowSize = 1;
 config.fCoupling = fCoupling;
 % define temporal difference
-config.sampleRate = 1000;
-config.dt = 1/1000;
-config.psthdt = 1/1000 * config.windowSize;
+config.sampleRate = sampleRate;
+config.dt = 1/config.sampleRate;
+config.psthdt = config.dt * config.windowSize;
 
 config.numFolds = 10;
 config.numModels = 15;
 
 % History and coupling config
-config.numOfHistoryParams = 20;
-config.numOfCouplingParams = 4;
-config.lastPeakHistory = 0.075;
-config.bForHistory = config.dt * 5;
-config.lastPeakCoupling = 0.025;
+config.numOfHistoryParams = 4;
+config.numOfCouplingParams = 5;
+config.lastPeakHistory = config.dt * 5;
+config.bForHistory =  0.00001;
+config.lastPeakCoupling = config.dt * 4;
 config.bForCoupling = config.dt * 5;
-config.numOfRepeats = 1;
+config.numOfRepeats = 40;
 
 % compute a filter, which will be used to smooth the firing rate
 filter = gaussmf(-4:4,[2 0]);
@@ -41,7 +41,7 @@ config.filter = filter;
 
 load([folderPath num2str(neuronNumber)]);
 
-maxBins = ceil(length(posx) * 0.1);
+maxBins = ceil(length(posx) * 0.12);
 
 % Get position, head direction and spike train data of the neuron we want to
 % learn
@@ -61,12 +61,12 @@ validationData.spiketrain = spiketrain(1:maxBins);
 
 firstPeak = max(learningData.refreactoryPeriod + config.dt, learningData.refreactoryPeriod);
 
-historyPeaks = [firstPeak config.lastPeakHistory];
+historyPeaks = [config.dt config.lastPeakHistory];
 couplingPeaks = [config.dt config.lastPeakCoupling];
 
-[~, ~, learningData.historyBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfHistoryParams, config.dt, historyPeaks, config.bForHistory, learningData.refreactoryPeriod);
-
+[~, ~, learningData.historyBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfHistoryParams, config.dt, historyPeaks, config.bForHistory, 0);
 [~, ~, learningData.couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfCouplingParams, config.dt, couplingPeaks, config.bForCoupling, 0);
+validationData.historyBaseVectors = learningData.historyBaseVectors;
 
 
 couplingData = [];

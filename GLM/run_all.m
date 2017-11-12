@@ -5,8 +5,7 @@ configFilePath = [folderPath 'config'];
 filePath = [folderPath 'data_for_cell_'];
 fCoupling = 1;
 coupledNeurons = [];
-for neuronNumber = 19:19
-
+for neuronNumber = 1:1
 neuronNumber
 [config, learningData, features, numModels, testFit, trainFit, param] =...
     runLearning(filePath, neuronNumber, configFilePath, fCoupling, coupledNeurons);

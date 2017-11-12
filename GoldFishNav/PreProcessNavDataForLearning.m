@@ -1,7 +1,7 @@
 load('All_Cells.mat');
 numOfNeurons = length(neurons);
 
-for i = 50:92
+for i = 1:92
     i
-build1MsDataForNeuronLearning(i);
+build20MsDataForNeuronLearning(i);
 end

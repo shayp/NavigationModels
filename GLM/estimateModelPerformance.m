@@ -1,7 +1,7 @@
 function [metrics, smoothPsthExp, smoothPsthSim, ISI] = ...
     estimateModelPerformance(dt,realFiringRate, modelFiringRate, smoothingFilter, windowSize)
 
-simulationLength = length(realFiringRate)
+simulationLength = length(realFiringRate);
 simNumOfSpikes = sum(modelFiringRate)
 expNumOfSpikes = sum(realFiringRate)
 
@@ -20,7 +20,6 @@ end
 % smooth firing rate
 smoothPsthExp = conv(psthExp, smoothingFilter,'same');
 smoothPsthSim = conv(psthSim, smoothingFilter,'same'); 
-
 [vecCorrelation, vecLegs] = xcorr(smoothPsthExp,smoothPsthSim);
 [~, index] = max(vecCorrelation);
 Leg =  vecLegs(index)

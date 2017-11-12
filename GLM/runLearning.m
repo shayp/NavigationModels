@@ -21,19 +21,20 @@ validationFeatures = buildFeatureMaps(config, validationData);
 
 % Add spike history or coupling if needed
 designMatrix = [];
+validationDesignMatrix  = [];
 if fCoupling
     designMatrix = getSpikeHistoryDataForLearning(config, learningData, numOfCoupledNeurons, couplingData);
+    validationDesignMatrix = getSpikeHistoryDataForLearning(config, validationData, numOfCoupledNeurons, validationCouplingData);
 end
 
 features.designMatrix = designMatrix;
 
 smooth_fr = conv(learningData.spiketrain, config.filter, 'same');
-
 % Get experiment tuning curves
 [pos_curve, hd_curve, vel_curve, border_curve] = ...
     computeTuningCurves(learningData, features, config, smooth_fr);
 
-% Plot experiment tuning curve
+% Plot experiment tuning curve 
 plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber);
 
 
@@ -46,23 +47,25 @@ plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, bor
     selectBestModel(testFit,config.numFolds, numModels);
 
 
-% validationStimulusSingle = getStimulusByModelNumber(topSingleCurve, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.velgrid, validationFeatures.bordergrid);
-% % Get Single model perfomace and parameters
-% [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI] = ...
-%     getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSingle, param{topSingleCurve},...
-%     modelType{topSingleCurve}, filter, numOfCoupledNeurons, validationCouplingData, learningData.historyBaseVectors, learningData.couplingBaseVectors);
-% 
-% % plot results
-% plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
-%     smoothPsthSim, neuronNumber, 'single', numOfCoupledNeurons, ISI)
+validationStimulusSingle = getStimulusByModelNumber(topSingleCurve, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.velgrid, validationFeatures.bordergrid);
+% Get Single model perfomace and parameters
+[metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI] = ...
+    getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSingle, param{topSingleCurve},...
+    modelType{topSingleCurve}, config.filter, numOfCoupledNeurons, validationCouplingData,...
+    learningData.historyBaseVectors, learningData.couplingBaseVectors, validationDesignMatrix);
+
+% plot results
+plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
+    smoothPsthSim, neuronNumber, 'single', numOfCoupledNeurons, ISI)
 
 validationStimulusSelected = getStimulusByModelNumber(selectedModel, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.velgrid, validationFeatures.bordergrid);
 
 
-% Get Single model perfomace and parameters
+% Get best model perfomace and parameters
 [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI] = ...
     getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSelected, param{selectedModel},...
-    modelType{selectedModel}, config.filter, numOfCoupledNeurons, validationCouplingData, learningData.historyBaseVectors, learningData.couplingBaseVectors);
+    modelType{selectedModel}, config.filter, numOfCoupledNeurons, validationCouplingData,...
+    learningData.historyBaseVectors, learningData.couplingBaseVectors, validationDesignMatrix);
 
 % plot results
 plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...

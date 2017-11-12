@@ -22,7 +22,7 @@ lengthOfExp = length(post);
 SpikeTime = ChoosedNeuron.SpikeTime - ChoosedNeuron.Time(1);
 posx = ChoosedNeuron.X';
 posy = ChoosedNeuron.Y';
-sampleRate = 1/8;
+sampleRate = 8;
 headDirection = ChoosedNeuron.Orient';
 % TimeBetweenRecords = mean(diff(ChoosedNeuron.Time));
 % IndexesToResolve =  find(diff(ChoosedNeuron.Time) > TimeBetweenRecords);
@@ -40,7 +40,7 @@ lastIndex = min(lengthOfExp, spikedIndexes(end) + 10);
 spiketrain = spiketrain(firstindex:lastIndex);
 posx = posx(firstindex:lastIndex);
 posy = posy(firstindex:lastIndex);
-headDirection = headDirection(firstindex:lastIndex);
+headDirection = headDirection(firstindex:lastIndex) + pi;
 save(['../GLM/rawDataForLearning/data_for_cell_' num2str(neuronNumber)], 'boxSize', 'post', 'SpikeTime', 'posx', 'posy', 'sampleRate', 'headDirection', 'spiketrain');
 % plot(diff(ChoosedNeuron.Time));
 end

@@ -15,10 +15,10 @@ for i = 1:simulationLength - 1
     curentLambda = exp(baseValue(i) + historyValue(i));
     sample = poissrnd(curentLambda, 1, 1);
     if sample > 0
-        firingRate(i) = 1;
+        firingRate(i) = sample;
         if fCoupling
             nextStep = min(spikeHistoryFilterLength, simulationLength - i - 1);
-            historyValue(i + 1:i+ nextStep) =  learnedParams.spikeHistory(1:nextStep);
+            historyValue(i + 1:i+ nextStep) =  historyValue(i + 1:i+ nextStep) + learnedParams.spikeHistory(1:nextStep);
         end
     end
 end
