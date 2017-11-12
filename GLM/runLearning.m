@@ -34,7 +34,7 @@ smooth_fr = conv(learningData.spiketrain, config.filter, 'same');
     computeTuningCurves(learningData, features, config, smooth_fr);
 
 % Plot experiment tuning curve
-plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber);
+plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber, learningData);
 
 
 % Fit model
@@ -46,15 +46,15 @@ plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, bor
     selectBestModel(testFit,config.numFolds, numModels);
 
 
-% validationStimulusSingle = getStimulusByModelNumber(topSingleCurve, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.velgrid, validationFeatures.bordergrid);
-% % Get Single model perfomace and parameters
-% [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI] = ...
-%     getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSingle, param{topSingleCurve},...
-%     modelType{topSingleCurve}, filter, numOfCoupledNeurons, validationCouplingData, learningData.historyBaseVectors, learningData.couplingBaseVectors);
-% 
-% % plot results
-% plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
-%     smoothPsthSim, neuronNumber, 'single', numOfCoupledNeurons, ISI)
+validationStimulusSingle = getStimulusByModelNumber(topSingleCurve, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.velgrid, validationFeatures.bordergrid);
+% Get Single model perfomace and parameters
+[metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI] = ...
+    getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSingle, param{topSingleCurve},...
+    modelType{topSingleCurve}, config.filter, numOfCoupledNeurons, validationCouplingData, learningData.historyBaseVectors, learningData.couplingBaseVectors);
+
+% plot results
+plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
+    smoothPsthSim, neuronNumber, 'single', numOfCoupledNeurons, ISI)
 
 validationStimulusSelected = getStimulusByModelNumber(selectedModel, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.velgrid, validationFeatures.bordergrid);
 

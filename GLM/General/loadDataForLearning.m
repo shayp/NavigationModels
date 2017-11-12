@@ -32,7 +32,7 @@ config.lastPeakHistory = 0.075;
 config.bForHistory = config.dt * 5;
 config.lastPeakCoupling = 0.025;
 config.bForCoupling = config.dt * 5;
-config.numOfRepeats = 1;
+config.numOfRepeats = 40;
 
 % compute a filter, which will be used to smooth the firing rate
 filter = gaussmf(-4:4,[2 0]);

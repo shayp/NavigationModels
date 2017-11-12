@@ -18,7 +18,7 @@ for i = 1:simulationLength - 1
         firingRate(i) = 1;
         if fCoupling
             nextStep = min(spikeHistoryFilterLength, simulationLength - i - 1);
-            historyValue(i + 1:i+ nextStep) =  learnedParams.spikeHistory(1:nextStep);
+            historyValue(i + 1:i+ nextStep) = learnedParams.spikeHistory(1:nextStep);
         end
     end
 end

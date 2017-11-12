@@ -22,7 +22,7 @@ if config.fCoupling
         couplingParams = reshape(modelParams(2 + config.numOfHistoryParams:couplingParamsLength + config.numOfHistoryParams + 1), config.numOfCouplingParams, numOfCoupledNeurons);
 
         for i = 1:numOfCoupledNeurons
-            learnedParams.couplingFilters(:,i) = couplingBaseVectors * couplingParams(:, 1);
+            learnedParams.couplingFilters(:,i) = couplingBaseVectors * couplingParams(:, i);
         end
         
         numOfFilters = numOfFilters + numOfCoupledNeurons;

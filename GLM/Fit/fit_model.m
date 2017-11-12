@@ -77,8 +77,7 @@ for k = 1:numFolds
     lossFunc  = @(param)ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
     [param] = fminunc(lossFunc, init_param, opts);
     train_ll = ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
-    
-    biasParam = param(1)
+    biasParam = param(1);
 
     if config.fCoupling
        spikeHistoryParam = param(2:1 + numOfCouplingParams); 
@@ -114,6 +113,9 @@ for k = 1:numFolds
     mean_fr_test = nanmean(test_spikes);
     log_llh_test_mean = nansum(mean_fr_test - test_spikes .* log(mean_fr_test) + log(factorial(test_spikes))) / sum(test_spikes);
     log_llh_test = log(2) * (-log_llh_test_model + log_llh_test_mean)
+    if log_llh_test == inf || log_llh_test == -inf
+        log_llh_test = 0;
+    end
     % compute MSE
     mse_test = nanmean((smooth_fr_hat_test-smooth_fr_test).^2);
 
@@ -137,15 +139,16 @@ for k = 1:numFolds
     varExplain_train = 1-(sse/sst);
     
     % compute correlation
-    correlation_train = abs(corr(smooth_fr_train,smooth_fr_hat_train,'type','Pearson'))
+    correlation_train = abs(corr(smooth_fr_train,smooth_fr_hat_train,'type','Pearson'));
     
     log_llh_train_model = nansum(spiketrain_hat_train - train_spikes.*log(spiketrain_hat_train) + log(factorial(train_spikes))) / sum(train_spikes);
     mean_fr_train = nanmean(train_spikes);
     log_llh_train_mean = nansum(mean_fr_train - train_spikes .* log(mean_fr_train) + log(factorial(train_spikes))) / sum(train_spikes);
-    log_llh_train = log(2) * (-log_llh_train_model + log_llh_train_mean)
-    % compute log-likelihood
-    %train_ll = -1 * ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
+    log_llh_train = log(2) * (-log_llh_train_model + log_llh_train_mean);
 
+    if log_llh_train == inf || log_llh_train == -inf
+        log_llh_train = 0;
+    end
     
     % compute MSE
     mse_train = nanmean((smooth_fr_hat_train-smooth_fr_train).^2);
