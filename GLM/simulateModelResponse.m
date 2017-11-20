@@ -2,6 +2,7 @@ function firingRate = simulateModelResponse(stimulus, tuningCurves, learnedParam
 simulationLength = size(stimulus, 1);
 historyValue = zeros(simulationLength, 1);
 firingRate = zeros(simulationLength, 1);
+lambdas = zeros(simulationLength, 1);
 baseValue = stimulus * tuningCurves' + learnedParams.biasParam;
 
 if fCoupling
@@ -12,14 +13,23 @@ if fCoupling
 end
 
 for i = 1:simulationLength - 1
-    curentLambda = exp(baseValue(i) + historyValue(i));
+    curentLambda = exp(baseValue(i) + historyValue(i)) * dt;
+    lambdas(i) = curentLambda;
     sample = poissrnd(curentLambda, 1, 1);
     if sample > 0
         firingRate(i) = 1;
         if fCoupling
             nextStep = min(spikeHistoryFilterLength, simulationLength - i - 1);
-            historyValue(i + 1:i+ nextStep) = learnedParams.spikeHistory(1:nextStep);
+            historyValue(i + 1:i+ nextStep) =  learnedParams.spikeHistory(1:nextStep);
         end
     end
 end
+
+numOfSpikes = sum(firingRate);
+% figure();
+% subplot(2,1,1);
+% hist(lambdas);
+% subplot(2,1,2);
+% hist(baseValue);
+
 end

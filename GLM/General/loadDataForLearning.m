@@ -15,7 +15,7 @@ config.maxVelocityYAxis = maxVelocityYAxis;
 config.boxSize = boxSize;
 config.maxDistanceFromBorder = maxDistanceFromBorder;
 
-config.windowSize = 20;
+config.windowSize = 40;
 config.fCoupling = fCoupling;
 % define temporal difference
 config.sampleRate = 1000;
@@ -26,13 +26,13 @@ config.numFolds = 10;
 config.numModels = 15;
 
 % History and coupling config
-config.numOfHistoryParams = 20;
+config.numOfHistoryParams = 10;
 config.numOfCouplingParams = 4;
 config.lastPeakHistory = 0.075;
 config.bForHistory = config.dt * 5;
 config.lastPeakCoupling = 0.025;
 config.bForCoupling = config.dt * 5;
-config.numOfRepeats = 40;
+config.numOfRepeats = 50;
 
 % compute a filter, which will be used to smooth the firing rate
 filter = gaussmf(-4:4,[2 0]);

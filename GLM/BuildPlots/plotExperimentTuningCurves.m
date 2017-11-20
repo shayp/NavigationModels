@@ -1,13 +1,13 @@
-function plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber, learningData)
+function plotExperimentTuningCurves(config, features, pos_curve, hd_curve, vel_curve, border_curve, neuronNumber, learningData, sessionName)
 % create x-axis vectors
 hd_vector =  linspace(0, 2 * pi, config.numOfHeadDirectionParams);
 velXAxis = linspace(-config.maxVelocityXAxis, config.maxVelocityXAxis, config.numOfVelocityAxisParams);
 velYAxis = linspace(config.maxVelocityYAxis, -config.maxVelocityYAxis, config.numOfVelocityAxisParams);
 figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-
 spikedInd = find(learningData.spiketrain);
 subplot(3,2,1);
 plot(learningData.posx, learningData.posy, learningData.posx(spikedInd), learningData.posy(spikedInd), '*');
+axis equal
 title('trajectory');
 xlim([0 100]);
 ylim([0 100]);
@@ -18,6 +18,8 @@ posYAxes = linspace(config.boxSize(2),0, config.numOfPositionAxisParams);
 subplot(3,2,2)
 imagesc(posXAxes, fliplr(posYAxes), pos_curve); colorbar
 colormap jet;
+axis equal;
+box off;
 %set(gca,'YTickLabel',{num2str(posYAxes)})
 title('Experiment position curve')
 xlabel('X Dim(cms)')
@@ -34,7 +36,9 @@ title('Experiment head direction curve')
 subplot(3,2,4)
 imagesc(velXAxis, fliplr(velYAxis), vel_curve); colorbar
 colormap jet;
-%set(gca,'YTickLabel',{num2str(velYAxis)})
+axis equal
+box off;
+
 title('Experiment Velocity curve');
 xlabel('dx/dt(cm/s)')
 ylabel('dy/dt(cm/s)')
@@ -46,8 +50,8 @@ box off
 xlabel('distance from border(cm)')
 ylabel('Spikes/s');
 title('Experiment border curve')
-
-savefig(['./Graphs/Neuron_' num2str(neuronNumber) 'expeimentCurves']);
+mkdir(['./Graphs/' sessionName]);
+savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) 'expeimentCurves']);
 
 drawnow;
 end

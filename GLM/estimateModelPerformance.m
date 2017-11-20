@@ -23,9 +23,12 @@ smoothPsthSim = conv(psthSim, smoothingFilter,'same');
 
 [vecCorrelation, vecLegs] = xcorr(smoothPsthExp,smoothPsthSim);
 [~, index] = max(vecCorrelation);
-Leg =  vecLegs(index)
-corr(smoothPsthExp, circshift(smoothPsthSim,Leg),'type','Pearson')
-% smoothPsthSim = circshift(smoothPsthSim,Leg);
+Leg =  vecLegs(index);
+if Leg > -10 && Leg < 10
+    Leg
+    pearson = corr(smoothPsthExp, circshift(smoothPsthSim,Leg),'type','Pearson')
+    smoothPsthSim = circshift(smoothPsthSim,Leg);
+end
 
 % compare between test fr and model fr
 sse = sum((smoothPsthSim - smoothPsthExp).^2);
@@ -33,7 +36,7 @@ sst = sum((smoothPsthExp - mean(smoothPsthExp)).^2);
 metrics.varExplain = 1-(sse/sst);
 metrics.correlation = corr(smoothPsthExp, smoothPsthSim,'type','Pearson');
 metrics.mse = nanmean((smoothPsthSim - smoothPsthExp).^2);
-
+metrics.Leg = Leg;
 expISI = diff(find(realFiringRate));
 
 maxExpISI = max(expISI);

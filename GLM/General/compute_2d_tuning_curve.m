@@ -63,9 +63,9 @@ end
 %     
 % end
 
-% smooth with Gaussian
-% H = fspecial('gaussian'); % using default values - size=[3 3] and sigma=0.5
-% tuning_curve = imfilter(tuning_curve,H);
+%smooth with Gaussian
+H = fspecial('gaussian'); % using default values - size=[3 3] and sigma=0.5
+tuning_curve = imfilter(tuning_curve,H);
 
 
 return

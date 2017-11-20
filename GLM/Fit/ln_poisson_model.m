@@ -5,6 +5,10 @@ designMatrix = data{2};
 spikeTrain = data{3}; % number of spikes
 biasParam = param(1);
 
+% roughness regularizer weight - note: these are tuned using the sum of f,
+% and thus have decreasing influence with increasing amounts of data
+b_pos = 0.5; b_hd = 5e1;  b_vel = 8e0; b_border = 1e0;
+
 if config.fCoupling
    spikeHistoryParam = param(2:1 + numOfCouplingParams); 
    tuningParams = param(2 + numOfCouplingParams:end);
@@ -14,33 +18,37 @@ else
     linerProjection = tuningFeatures * tuningParams + biasParam;
 end
 
-rate = exp(linerProjection);
+firingRate = exp(linerProjection);
 
-% roughness regularizer weight - note: these are tuned using the sum of f,
-% and thus have decreasing influence with increasing amounts of data
-%b_pos = 0.5; b_hd = 1e0;  b_vel = 0.5; b_border = 1e0;
-b_pos = 0.001; b_hd = 1e0;  b_vel = 0.001; b_border = 1e0;
+% Negative Log likelihood
+ll_Trm0 = sum(firingRate)* config.dt;
+ll_Trm1 = -spikeTrain' * linerProjection;
+logLL = ll_Trm0 + ll_Trm1;
 
-%b_pos = 0; b_hd = 0;  b_vel = 0; b_border = 0;
-% start computing the Hessian
+% derivatives
 
-dlTuningParams = tuningFeatures' * (rate - spikeTrain);
-dlBias = sum(rate) - sum(spikeTrain);
+dlTuning0 = firingRate' * tuningFeatures;
+dlTuning1 = spikeTrain' * tuningFeatures;
+dlTuningParams = (dlTuning0 * config.dt - dlTuning1)';
+dlBias = sum(firingRate) * config.dt - sum(spikeTrain);
+
 dlHistory = [];
 if config.fCoupling
-    dlHistory = designMatrix' * (rate - spikeTrain);
+    dlHistory0 = firingRate' * designMatrix;
+    dlHistory1 = spikeTrain' * designMatrix;
+    dlHistory = (dlHistory0 * config.dt - dlHistory1)';
 end
 
-ratediag = spdiags(rate,0, length(spikeTrain), length(spikeTrain));
+ratediag = spdiags(firingRate,0, length(spikeTrain), length(spikeTrain));
 
-HTuning = (tuningFeatures' * (bsxfun(@times,tuningFeatures,rate))); 
-HBias = sum(rate);
-HTuningBias = (sum(ratediag,1) * tuningFeatures)';
+HTuning = (tuningFeatures' * (bsxfun(@times,tuningFeatures,firingRate))) *  config.dt; 
+HBias = sum(firingRate) *  config.dt;
+HTuningBias = (sum(ratediag,1) * tuningFeatures)' *  config.dt;
 
 if config.fCoupling
-    HHistory = (designMatrix' * (bsxfun(@times,designMatrix,rate)));
-    HTuningHistory = ((designMatrix' * ratediag) * tuningFeatures)';
-    HHistoryBias = (rate' * designMatrix)';
+    HHistory = (designMatrix' * (bsxfun(@times,designMatrix,firingRate))) * config.dt;
+    HTuningHistory = ((designMatrix' * ratediag) * tuningFeatures)' *  config.dt;
+    HHistoryBias = (firingRate' * designMatrix)' *  config.dt;
 else
     HHistory = [];
     HTuningHistory = [];
@@ -66,7 +74,6 @@ if ~isempty(param_hd)
     [J_hd,J_hd_g,J_hd_h] = rough_penalty_1d_circ(param_hd,b_hd);
 end
 
-
 if ~isempty(param_vel)
     [J_vel,J_vel_g,J_vel_h] = rough_penalty_2d(param_vel,b_vel);
 end
@@ -76,7 +83,7 @@ if ~isempty(param_border)
 end
 
 %% compute f, the gradient, and the hessian 
-f = sum(rate-spikeTrain.*linerProjection) + J_pos + J_hd + J_vel + J_border;
+f = logLL + J_pos + J_hd + J_vel + J_border;
 dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_vel_g; J_border_g];
 df = [dlBias; dlHistory; dlTuningParams];
 HTuning = HTuning + blkdiag(J_pos_h,J_hd_h, J_vel_h, J_border_h);
