@@ -20,15 +20,15 @@ end
 % smooth firing rate
 smoothPsthExp = conv(psthExp, smoothingFilter,'same');
 smoothPsthSim = conv(psthSim, smoothingFilter,'same'); 
-
+%smoothPsthSim = psthSim;
 [vecCorrelation, vecLegs] = xcorr(smoothPsthExp,smoothPsthSim);
 [~, index] = max(vecCorrelation);
 Leg =  vecLegs(index);
-if Leg > -10 && Leg < 10
+if Leg * windowSize  > -40 && Leg * windowSize < 40
     Leg
     pearson = corr(smoothPsthExp, circshift(smoothPsthSim,Leg),'type','Pearson')
-    smoothPsthSim = circshift(smoothPsthSim,Leg);
-end
+     smoothPsthSim = circshift(smoothPsthSim,Leg);
+ end
 
 % compare between test fr and model fr
 sse = sum((smoothPsthSim - smoothPsthExp).^2);

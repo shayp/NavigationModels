@@ -70,6 +70,7 @@ for k = 1:numFolds
         init_param(1) = -10;
     else
         init_param = param;
+        %init_param = zeros(numOfLearnedParams, 1);
         init_param(1) = -10;
     end
     lossFunc  = @(param)ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);

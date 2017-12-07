@@ -1,36 +1,36 @@
-function stimulus = getStimulusByModelNumber(modelNumber, posgrid, hdgrid, velgrid, bordergrid)
+function stimulus = getStimulusByModelNumber(modelNumber, posgrid, hdgrid, speedgrid, speedHDGrid)
 
 switch modelNumber
     case 1
-        stimulus = [posgrid hdgrid velgrid bordergrid];
+        stimulus = [posgrid hdgrid speedgrid speedHDGrid];
     case 2
-        stimulus = [posgrid hdgrid velgrid];
+        stimulus = [posgrid hdgrid speedgrid];
     case 3
-        stimulus = [posgrid hdgrid bordergrid];
+        stimulus = [posgrid hdgrid speedHDGrid];
     case 4
-        stimulus = [posgrid velgrid bordergrid];
+        stimulus = [posgrid speedgrid speedHDGrid];
     case 5
-        stimulus = [hdgrid velgrid bordergrid];
+        stimulus = [hdgrid speedgrid speedHDGrid];
     case 6
         stimulus = [posgrid hdgrid];
     case 7
-        stimulus = [posgrid velgrid];
+        stimulus = [posgrid speedgrid];
     case 8
-        stimulus = [posgrid bordergrid];
+        stimulus = [posgrid speedHDGrid];
     case 9
-        stimulus = [hdgrid velgrid];
+        stimulus = [hdgrid speedgrid];
     case 10
-        stimulus = [hdgrid bordergrid];
+        stimulus = [hdgrid speedHDGrid];
     case 11
-        stimulus = [velgrid bordergrid];
+        stimulus = [speedgrid speedHDGrid];
     case 12
         stimulus = [posgrid];
     case 13
         stimulus = [hdgrid];
     case 14
-        stimulus = [velgrid];
+        stimulus = [speedgrid];
     case 15
-        stimulus = [bordergrid];
+        stimulus = [speedHDGrid];
 
 
 end

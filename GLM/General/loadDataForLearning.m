@@ -1,36 +1,33 @@
-function [config, learningData, couplingData, validationData, validationCouplingData] = loadDataForLearning(folderPath,  configFilePath, neuronNumber, fCoupling, coupledNeurons)
+function [config, learningData, couplingData, validationData, validationCouplingData, isi, posx, posy, boxSize,sampleRate,headDirection] = loadDataForLearning(folderPath,  configFilePath, neuronNumber, fCoupling, coupledNeurons)
 load(configFilePath);
 
 % Define num of learned parameters for learning
 config.numOfHeadDirectionParams = numOfHeadDirectionParams;
-config.numOfDistanceFromBorderParams = numOfDistanceFromBorderParams;
+config.numOfHDSpeedBins = 10;
+config.numOfSpeedBins = 10;
+
 config.numOfPositionAxisParams = numOfPositionAxisParams;
 config.numOfPositionParams = config.numOfPositionAxisParams * config.numOfPositionAxisParams;
-config.numOfVelocityAxisParams = numOfVelocityAxisParams;
-config.numOfVelocityParams = numOfVelocityAxisParams * numOfVelocityAxisParams;
-config.numofTuningParams = config.numOfHeadDirectionParams + config.numOfDistanceFromBorderParams + config.numOfPositionParams + config.numOfVelocityParams;
+config.numofTuningParams = config.numOfHeadDirectionParams + config.numOfHDSpeedBins + config.numOfPositionParams + config.numOfSpeedBins;
 % define limits of bins
-config.maxVelocityXAxis = maxVelocityXAxis;
-config.maxVelocityYAxis = maxVelocityYAxis;
-config.boxSize = boxSize;
-config.maxDistanceFromBorder = maxDistanceFromBorder;
 
-config.windowSize = 40;
+config.boxSize = boxSize;
+
+config.windowSize = 20;
 config.fCoupling = fCoupling;
 % define temporal difference
 config.sampleRate = 1000;
 config.dt = 1/1000;
 config.psthdt = 1/1000 * config.windowSize;
-
 config.numFolds = 10;
 config.numModels = 15;
-
+config.maxSpeed = 50;
 % History and coupling config
 config.numOfHistoryParams = 10;
-config.numOfCouplingParams = 4;
+config.numOfCouplingParams = 5;
 config.lastPeakHistory = 0.075;
 config.bForHistory = config.dt * 5;
-config.lastPeakCoupling = 0.025;
+config.lastPeakCoupling = 0.045;
 config.bForCoupling = config.dt * 5;
 config.numOfRepeats = 50;
 
@@ -56,7 +53,14 @@ validationData.posx = posx(1:maxBins);
 validationData.posy = posy(1:maxBins);
 validationData.headDirection = headDirection(1:maxBins);
 validationData.spiketrain = spiketrain(1:maxBins);
+spikeDistance = diff(find(spiketrain));
+maxISI = max(spikeDistance);
+isi = zeros(maxISI, 1);
+for i = 1:maxISI
+    isi(i) = sum(i == spikeDistance);
+end
 
+isi = isi / length(spikeDistance);
 [learningData.refreactoryPeriod , learningData.ISIPeak] =  getRefractoryPeriodForNeurons(spiketrain, config.dt);
 
 firstPeak = max(learningData.refreactoryPeriod + config.dt, learningData.refreactoryPeriod);

@@ -66,11 +66,11 @@ LL2 = LL_values(:,top2);
 LL3 = LL_values(:,top3);
 LL4 = LL_values(:,top4);
 
-% 
-%  [p_LL_12,~] = signrank(LL2,LL1,'tail','right');
-%  [p_LL_23,~] = signrank(LL3,LL2,'tail','right');
-%  [p_LL_34,~] = signrank(LL4,LL3,'tail','right');
-% 
+
+ [p_LL_12,~] = signrank(LL2,LL1,'tail','right');
+ [p_LL_23,~] = signrank(LL3,LL2,'tail','right');
+ [p_LL_34,~] = signrank(LL4,LL3,'tail','right');
+
 % if p_LL_12 < 0.05 % double model is sig. better
 %     if p_LL_23 < 0.05  % triple model is sig. better
 %         if p_LL_34 < 0.05

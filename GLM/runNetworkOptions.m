@@ -1,7 +1,7 @@
 clear all;
 %profile on
-sessionName = '11025-20050501';
-neurons = [1 2 3 4 5 6 7];
+sessionName = '11084-08030506';
+neurons = [1 2];
 
 folderPath = strcat('C:\projects\NavigationModels\GLM\rawDataForLearning\', sessionName);
 configFilePath = ['C:\projects\NavigationModels\GLM\rawDataForLearning\' 'config'];

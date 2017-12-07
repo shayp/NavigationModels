@@ -1,6 +1,7 @@
 PPName='AllNeuronsV1.pptx';
-FigsDir='C:\Users\pinskyeh\Dropbox\ExpData\NLoger\FiguresTotal\';
-
+FigsDir='C:\projects\GoldfishAnalysis\tmp\';
+figs = dir(strcat(FigsDir, '*.fig'));
+numOfNeurons = length(figs);
 %% Start new presentation
 isOpen  = exportToPPTX();
 if ~isempty(isOpen)
@@ -11,12 +12,12 @@ end
 exportToPPTX('new','Dimensions',[10 5.625]);
 %%
 
-for i=1:length(neuron)
-  neuron(i).NeuronPage;
+for i=1:numOfNeurons
+  fig = openfig(strcat(FigsDir,figs(i).name));
   set (gcf,'units','inch','position',[1,1,10,5.625]);
   exportToPPTX('addslide');
   exportToPPTX('addpicture',gcf);
   close all
 end
 
-exportToPPTX('save','tmp');
+exportToPPTX('save','tmp2');

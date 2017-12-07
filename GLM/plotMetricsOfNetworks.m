@@ -35,7 +35,7 @@ for i = 1:length(networkDirs)
     end
 end
 cellsIndex
-
+correlation
 corrMat = cell2mat(correlation);
 mseMat = cell2mat(mse);
 varExplainMat = cell2mat(varExplain);

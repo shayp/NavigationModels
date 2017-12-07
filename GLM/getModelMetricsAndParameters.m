@@ -2,7 +2,7 @@ function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiring
     getModelMetricsAndParameters(config, spiketrain, stimulus, modelParams,...
     modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors)
 
-numOfFilters = 5;
+numOfFilters = 4;
 
 % Set learned bias
 learnedParams.biasParam = modelParams(1);
@@ -11,8 +11,6 @@ if config.fCoupling
     
     couplingParamsLength = config.numOfCouplingParams * numOfCoupledNeurons;
    
-    % Spike history filter added
-    numOfFilters = numOfFilters + 1;
    
     % Set spike history filter
     learnedParams.spikeHistory = historyBaseVectors * modelParams(2:1 + config.numOfHistoryParams)';
@@ -24,9 +22,7 @@ if config.fCoupling
         for i = 1:numOfCoupledNeurons
             learnedParams.couplingFilters(:,i) = couplingBaseVectors * couplingParams(:, i);
         end
-        
-        numOfFilters = numOfFilters + numOfCoupledNeurons;
-    end
+            end
     
     % Set tuning params
     tuningParams = modelParams(2 + config.numOfHistoryParams + couplingParamsLength:end);
@@ -62,9 +58,9 @@ ISI.simISITimes = simISITimes;
 ISI.simISIPr = simISIPr;
 
 % Get the learned tuning curves
-[learnedParams.pos_param, learnedParams.hd_param, learnedParams.vel_param, learnedParams.border_param] = ...
+[learnedParams.pos_param, learnedParams.hd_param, learnedParams.speed_param, learnedParams.speedHD_param] = ...
     find_param(tuningParams, modelType, config.numOfPositionParams, config.numOfHeadDirectionParams, ...
-    config.numOfVelocityParams, config.numOfDistanceFromBorderParams);
+    config.numOfSpeedBins, config.numOfHDSpeedBins);
 
 % IF the curves are not configured in the model, zeroize
 if numel(learnedParams.pos_param) ~= config.numOfPositionParams
@@ -75,12 +71,12 @@ if numel(learnedParams.hd_param) ~= config.numOfHeadDirectionParams
     learnedParams.hd_param = 0;
     numOfFilters = numOfFilters - 1;
 end
-if numel(learnedParams.vel_param) ~= config.numOfVelocityParams
-    learnedParams.vel_param = 0;
+if numel(learnedParams.speed_param) ~= config.numOfSpeedBins
+    learnedParams.speed_param = 0;
     numOfFilters = numOfFilters - 1;
 end
-if numel(learnedParams.border_param) ~= config.numOfDistanceFromBorderParams
-    learnedParams.border_param = 0;
+if numel(learnedParams.speedHD_param) ~= config.numOfHDSpeedBins
+    learnedParams.speedHD_param = 0;
     numOfFilters = numOfFilters - 1;
 end
 

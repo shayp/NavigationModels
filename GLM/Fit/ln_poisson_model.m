@@ -7,7 +7,7 @@ biasParam = param(1);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
-b_pos = 0.5; b_hd = 5e1;  b_vel = 8e0; b_border = 1e0;
+b_pos = 5e-1; b_hd = 5e-1;  b_speed = 5e-3; b_speedHD =5e-3;
 
 if config.fCoupling
    spikeHistoryParam = param(2:1 + numOfCouplingParams); 
@@ -60,10 +60,10 @@ end
 % initialize parameter-relevant variables
 J_pos = 0; J_pos_g = []; J_pos_h = []; 
 J_hd = 0; J_hd_g = []; J_hd_h = [];  
-J_vel = 0; J_vel_g = []; J_vel_h = [];  
-J_border = 0; J_border_g = []; J_border_h = [];  
+J_speed = 0; J_speed_g = []; J_speed_h = [];  
+J_speedHD = 0; J_speedHD_g = []; J_speedHD_h = [];  
 % find the parameters
-[param_pos,param_hd,param_vel, param_border] = find_param(tuningParams, modelType, config.numOfPositionParams,config.numOfHeadDirectionParams, config.numOfVelocityParams, config.numOfDistanceFromBorderParams);
+[param_pos,param_hd,param_speed, param_speedHD] = find_param(tuningParams, modelType, config.numOfPositionParams,config.numOfHeadDirectionParams, config.numOfSpeedBins, config.numOfHDSpeedBins);
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
@@ -74,19 +74,19 @@ if ~isempty(param_hd)
     [J_hd,J_hd_g,J_hd_h] = rough_penalty_1d_circ(param_hd,b_hd);
 end
 
-if ~isempty(param_vel)
-    [J_vel,J_vel_g,J_vel_h] = rough_penalty_2d(param_vel,b_vel);
+if ~isempty(param_speed)
+    [J_speed,J_speed_g,J_speed_h] = rough_penalty_1d(param_speed,b_speed);
 end
 
-if ~isempty(param_border)
-    [J_border,J_border_g,J_border_h] = rough_penalty_1d(param_border,b_border);
+if ~isempty(param_speedHD)
+    [J_speedHD,J_speedHD_g,J_speedHD_h] = rough_penalty_1d(param_speedHD,b_speedHD);
 end
 
 %% compute f, the gradient, and the hessian 
-f = logLL + J_pos + J_hd + J_vel + J_border;
-dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_vel_g; J_border_g];
+f = logLL + J_pos + J_hd + J_speed + J_speedHD;
+dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_speed_g; J_speedHD_g];
 df = [dlBias; dlHistory; dlTuningParams];
-HTuning = HTuning + blkdiag(J_pos_h,J_hd_h, J_vel_h, J_border_h);
+HTuning = HTuning + blkdiag(J_pos_h,J_hd_h, J_speed_h, J_speedHD_h);
 hessian = [[HBias HHistoryBias' HTuningBias']; [HHistoryBias HHistory HTuningHistory']; [HTuningBias HTuningHistory HTuning]];
 
 
