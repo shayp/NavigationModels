@@ -1,5 +1,5 @@
 clear all;
-baseFolder = 'Graphs';
+baseFolder = 'archive/check';
 slash = '/';
 networkDirs = dir(baseFolder);
 
@@ -34,55 +34,115 @@ for i = 1:length(networkDirs)
         cellsIndex = cellsIndex + numOfNeurons;
     end
 end
+%correlation(:,4) = [];
+
 cellsIndex
 correlation
 corrMat = cell2mat(correlation);
-mseMat = cell2mat(mse);
-varExplainMat = cell2mat(varExplain);
-varExplainMat = varExplainMat * 100;
+varMat = cell2mat(varExplain);
+singleCorrMat = corrMat([1 3 5],:);
+singleVarMat = varMat([1 3 5],:);
+singleVarMat(singleVarMat < 0) = nan;
+BestCorrMat = corrMat([2 4 6],:);
+BestVarMat = varMat([2 4 6],:);
+BestVarMat(BestVarMat < 0) = nan;
 [~, numOfNeurons] = size(corrMat);
-meanCorr = mean(corrMat,2);
-stdCorr = std(corrMat') / sqrt(numOfNeurons);
 
-meanMSE = mean(mseMat,2);
-stdMSE = std(mseMat') / sqrt(numOfNeurons);
+meansingleCorrMat = mean(singleCorrMat,2);
+stdCorrSingle = std(singleCorrMat') / sqrt(numOfNeurons);
 
-meanVarExp = mean(varExplainMat,2);
-stdVarExp = std(varExplainMat') / sqrt(numOfNeurons);
+meanBestCorrMat = mean(BestCorrMat,2);
+stdCorrBest = std(BestCorrMat') / sqrt(numOfNeurons);
+
+meansingleVarMat = nanmean(singleVarMat,2);
+stdVarSingle = nanstd(singleVarMat') / sqrt(numOfNeurons);
+
+meanBestVarMat = nanmean(BestVarMat,2);
+stdVarBest = nanstd(BestVarMat') / sqrt(numOfNeurons);
+
 
 figure();
-subplot(3,1,1);
-errorbar(meanCorr, stdCorr,'ok','linewidth',3);
+subplot(2,1,1);
+errorbar(meansingleCorrMat, stdCorrSingle,'ok','linewidth',2);
 hold on;
-plot(0.5:6.5,mean(meanCorr) * ones(7,1),'--b','linewidth',2)
+plot(0.5:3.5,mean(meansingleCorrMat) * ones(4,1),'--b','linewidth',2)
 hold off;
 box off
-set(gca,'fontsize',14)
-set(gca,'XLim',[0 7]); set(gca,'XTick',1:6)
-set(gca,'XTickLabel',{'NoHistory Single','NoHistory Best','History Single','History Best','Coupled single','Coupled Best'});
-ylabel('Pearson correlation');
-title(' Pearson correlation');
+set(gca,'fontsize',10)
+set(gca,'XLim',[0 4]); set(gca,'XTick',1:3)
+set(gca,'XTickLabel',{'NoHistory Single','History Single','Coupled single',});
+ylabel('Correlation coefficient');
+title('Single filter - Pearson correlation');
 
-subplot(3,1,2);
-errorbar(meanMSE, stdMSE,'ok','linewidth',3);hold on;
+subplot(2,1,2);
+errorbar(meanBestCorrMat, stdCorrBest,'ok','linewidth',2);
 hold on;
-plot(0.5:6.5,mean(meanMSE) * ones(7,1),'--b','linewidth',2)
+plot(0.5:3.5,mean(meanBestCorrMat) * ones(4,1),'--b','linewidth',2)
 hold off;
 box off
-set(gca,'fontsize',14)
-set(gca,'XLim',[0 7]); set(gca,'XTick',1:6)
-set(gca,'XTickLabel',{'NoHistory Single','NoHistory Best','History Single','History Best','Coupled single','Coupled Best'});
-ylabel('Mean squred error');
-title(' Mean squred error');
+set(gca,'fontsize',10)
+set(gca,'XLim',[0 4]); set(gca,'XTick',1:3)
+set(gca,'XTickLabel',{'NoHistory Best','History Best','Coupled Best'});
+ylabel('Correlation coefficient');
+title('Best filters -  Pearson correlation');
 
-subplot(3,1,3);
-errorbar(meanVarExp, stdVarExp,'ok','linewidth',3);
+
+
+figure();
+subplot(2,1,1);
+errorbar(meansingleVarMat, stdVarSingle,'ok','linewidth',2);
 hold on;
-plot(0.5:6.5,mean(meanVarExp) * ones(7,1),'--b','linewidth',2)
+plot(0.5:3.5,mean(meansingleVarMat) * ones(4,1),'--b','linewidth',2)
 hold off;
 box off
-set(gca,'fontsize',14)
-set(gca,'XLim',[0 7]); set(gca,'XTick',1:6)
-set(gca,'XTickLabel',{'NoHistory Single','NoHistory Best','History Single','History Best','Coupled single','Coupled Best'});
-ylabel('Explained variance');
-title('Fraction of explained variance');
+set(gca,'fontsize',10)
+set(gca,'XLim',[0 4]); set(gca,'XTick',1:3)
+set(gca,'XTickLabel',{'NoHistory Single','History Single','Coupled single',});
+ylabel('Fraction of explained variance');
+title('Single filter - Fraction of explained variance');
+
+subplot(2,1,2);
+errorbar(meanBestVarMat, stdVarBest,'ok','linewidth',2);
+hold on;
+plot(0.5:3.5,mean(meanBestVarMat) * ones(4,1),'--b','linewidth',2)
+hold off;
+box off
+set(gca,'fontsize',10)
+set(gca,'XLim',[0 4]); set(gca,'XTick',1:3)
+set(gca,'XTickLabel',{'NoHistory Best','History Best','Coupled Best'});
+ylabel('Fraction of explained variance');
+title('Best filters - Fraction of explained variance');
+
+figure();
+
+meanSingle = mean(mean(singleCorrMat));
+stdSingle = std(singleCorrMat);
+
+meanBest = mean(mean(BestCorrMat));
+stdBest = std(BestCorrMat') / sqrt(numOfNeurons);
+bar([meanSingle, meanBest]);
+
+% 
+% subplot(3,1,2);
+% errorbar(meanMSE, stdMSE,'ok','linewidth',3);hold on;
+% hold on;
+% plot(0.5:6.5,mean(meanMSE) * ones(7,1),'--b','linewidth',2)
+% hold off;
+% box off
+% set(gca,'fontsize',14)
+% set(gca,'XLim',[0 7]); set(gca,'XTick',1:6)
+% set(gca,'XTickLabel',{'NoHistory Single','NoHistory Best','History Single','History Best','Coupled single','Coupled Best'});
+% ylabel('Mean squred error');
+% title(' Mean squred error');
+% 
+% subplot(3,1,3);
+% errorbar(meanVarExp, stdVarExp,'ok','linewidth',3);
+% hold on;
+% plot(0.5:6.5,mean(meanVarExp) * ones(7,1),'--b','linewidth',2)
+% hold off;
+% box off
+% set(gca,'fontsize',14)
+% set(gca,'XLim',[0 7]); set(gca,'XTick',1:6)
+% set(gca,'XTickLabel',{'NoHistory Single','NoHistory Best','History Single','History Best','Coupled single','Coupled Best'});
+% ylabel('Explained variance');
+% title('Fraction of explained variance');

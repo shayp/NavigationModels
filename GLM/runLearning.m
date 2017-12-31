@@ -72,9 +72,9 @@ if config.fCoupling == 0
     learnedParams.biasParam = modelParams(1);
     couplingData = [];
     learningStimulus = getStimulusByModelNumber(topSingleCurve, features.posgrid, features.hdgrid, features.speedgrid, features.speedHDGrid);
-    trainFiringRate = simulateModelResponse(learningStimulus, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt);
+    trainFiringRate = simulateResponsePillow(learningStimulus, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt);
     
-    testFiringRate = simulateModelResponse(validationStimulusSingle, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData,config.dt);
+    testFiringRate = simulateResponsePillow(validationStimulusSingle, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData,config.dt);
     spiketrain = [testFiringRate; trainFiringRate];
 
     save(['simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
@@ -87,9 +87,9 @@ elseif config.fCoupling == 1 && numOfCoupledNeurons == 0
 
     couplingData = [];
     learningStimulus = getStimulusByModelNumber(topSingleCurve, features.posgrid, features.hdgrid, features.speedgrid, features.speedHDGrid);
-    trainFiringRate = simulateModelResponse(learningStimulus, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt);
+    trainFiringRate = simulateResponsePillow(learningStimulus, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt);
     
-    testFiringRate = simulateModelResponse(validationStimulusSingle, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData,config.dt);
+    testFiringRate = simulateResponsePillow(validationStimulusSingle, tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData,config.dt);
     spiketrain = [testFiringRate; trainFiringRate];
 
     save(['history_simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
@@ -99,7 +99,6 @@ end
     getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSelected, param{selectedModel},...
     modelType{selectedModel}, config.filter, numOfCoupledNeurons, validationCouplingData,...
     learningData.historyBaseVectors, learningData.couplingBaseVectors);
-
 % plot results
 plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
     smoothPsthSim, neuronNumber, 'best', numOfCoupledNeurons, ISI,expISI,  sessionName, modelFiringRate, validationData, coupledNeurons)

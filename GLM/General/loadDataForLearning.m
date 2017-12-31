@@ -2,7 +2,7 @@ function [config, learningData, couplingData, validationData, validationCoupling
 load(configFilePath);
 
 % Define num of learned parameters for learning
-config.numOfHeadDirectionParams = numOfHeadDirectionParams;
+config.numOfHeadDirectionParams = 30;
 config.numOfHDSpeedBins = 10;
 config.numOfSpeedBins = 10;
 
@@ -13,7 +13,7 @@ config.numofTuningParams = config.numOfHeadDirectionParams + config.numOfHDSpeed
 
 config.boxSize = boxSize;
 
-config.windowSize = 20;
+config.windowSize = 5;
 config.fCoupling = fCoupling;
 % define temporal difference
 config.sampleRate = 1000;
@@ -23,13 +23,17 @@ config.numFolds = 10;
 config.numModels = 15;
 config.maxSpeed = 50;
 % History and coupling config
-config.numOfHistoryParams = 10;
-config.numOfCouplingParams = 5;
-config.lastPeakHistory = 0.075;
+config.numOfHistoryParams = 15;
+%config.numOfCouplingParams = 20;
+config.numOfCouplingParams = 10;
+
+config.lastPeakHistory = 0.17;
 config.bForHistory = config.dt * 5;
-config.lastPeakCoupling = 0.045;
-config.bForCoupling = config.dt * 5;
-config.numOfRepeats = 50;
+%config.lastPeakCoupling = 0.025;
+
+config.lastPeakCoupling = 0.03;
+config.bForCoupling = 0.5;
+config.numOfRepeats = 200;
 
 % compute a filter, which will be used to smooth the firing rate
 filter = gaussmf(-4:4,[2 0]);
@@ -66,12 +70,12 @@ isi = isi / length(spikeDistance);
 firstPeak = max(learningData.refreactoryPeriod + config.dt, learningData.refreactoryPeriod);
 
 historyPeaks = [firstPeak config.lastPeakHistory];
-couplingPeaks = [config.dt config.lastPeakCoupling];
+couplingPeaks = [0.005 config.lastPeakCoupling];
 
 [~, ~, learningData.historyBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfHistoryParams, config.dt, historyPeaks, config.bForHistory, learningData.refreactoryPeriod);
 
-[~, ~, learningData.couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfCouplingParams, config.dt, couplingPeaks, config.bForCoupling, 0);
-
+[~, ~, learningData.couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfCouplingParams, config.dt, couplingPeaks, config.bForCoupling, config.dt);
+% learningData.couplingBaseVectors = buildBaseVectors(config.numOfCouplingParams);
 
 couplingData = [];
 validationCouplingData = [];

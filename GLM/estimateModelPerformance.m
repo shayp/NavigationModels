@@ -1,7 +1,7 @@
 function [metrics, smoothPsthExp, smoothPsthSim, ISI] = ...
     estimateModelPerformance(dt,realFiringRate, modelFiringRate, smoothingFilter, windowSize)
 
-simulationLength = length(realFiringRate)
+simulationLength = length(realFiringRate);
 simNumOfSpikes = sum(modelFiringRate)
 expNumOfSpikes = sum(realFiringRate)
 

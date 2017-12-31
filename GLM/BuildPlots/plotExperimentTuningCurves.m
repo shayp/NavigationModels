@@ -5,7 +5,7 @@ speedBins = linspace(0, config.maxSpeed, config.numOfSpeedBins);
 figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 spikedInd = find(learningData.spiketrain);
 subplot(3,2,1);
-plot(learningData.posx, learningData.posy, learningData.posx(spikedInd), learningData.posy(spikedInd), '*');
+plot(learningData.posx, learningData.posy,'-k', learningData.posx(spikedInd), learningData.posy(spikedInd), '.r');
 axis square
 title('trajectory');
 xlim([0 100]);
@@ -25,17 +25,11 @@ xlabel('X Dim(cms)')
 ylabel('Y Dim(cms)')
     
 subplot(3,2,3)
-plot(hd_vector,hd_curve,'k','linewidth',3)
-box off
-axis square
-
-axis([0 2*pi -inf inf])
-xlabel('direction angle')
-ylabel('Spikes/s');
+polarplot([hd_vector hd_vector(1)],[hd_curve; hd_curve(1)],'k','linewidth',1)
 title('Experiment head direction curve')
 
 subplot(3,2,4)
-plot(speedBins, speed_curve); 
+plot(speedBins, speed_curve,'k','linewidth',3); 
 axis square
 box off;
 

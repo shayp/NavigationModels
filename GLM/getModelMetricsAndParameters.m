@@ -36,7 +36,7 @@ modelFiringRate = zeros(simulationLength, config.numOfRepeats);
 simISI = [];
 for i = 1:config.numOfRepeats
     % Get simulated firing rate
-    modelFiringRate(:,i) = simulateModelResponse(stimulus, tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt);   
+    modelFiringRate(:,i) = simulateResponsePillow(stimulus, tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt);   
     simISI = [simISI diff(find(modelFiringRate(:,i)))'];
 end
 

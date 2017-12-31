@@ -14,8 +14,6 @@ modelType
 [~,numCol] = size(features);
 
 % divide the data up into 5*num_folds pieces
-sections = numFolds*5;
-edges = round(linspace(1,numel(spiketrain)+1,sections+1));
 lengthOfFold = floor(numel(spiketrain) / numFolds);
 % initialize matrices
 
@@ -76,7 +74,7 @@ for k = 1:numFolds
     lossFunc  = @(param)ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
     [param] = fminunc(lossFunc, init_param, opts);
 
-    biasParam = param(1)
+    biasParam = param(1);
 
     if config.fCoupling
        spikeHistoryParam = param(2:1 + numOfCouplingParams); 
@@ -111,7 +109,7 @@ for k = 1:numFolds
     log_llh_test_mean = nansum(mean_fr_test - fr_test .* log(mean_fr_test) + log(factorial(fr_test))) / sum(fr_test);
     log_llh_test = log(2) * (-log_llh_test_model + log_llh_test_mean)
     if log_llh_test == inf || log_llh_test == -inf
-        log_llh_test = 0;
+        log_llh_test = nan;
     end
     % compute MSE
     mse_test = nanmean((fr_hat_test-fr_test).^2);
@@ -158,6 +156,10 @@ for k = 1:numFolds
 
 end
 
-param_mean = nanmean(paramMat);
+selectedInd = ~isnan(testFit(:,3));
+param_mean = paramMat(selectedInd,:);
+if sum(selectedInd) > 1
+    param_mean = nanmean(param_mean);
+end
 
 return

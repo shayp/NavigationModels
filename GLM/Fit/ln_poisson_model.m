@@ -7,7 +7,7 @@ biasParam = param(1);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
-b_pos = 5e-1; b_hd = 5e-1;  b_speed = 5e-3; b_speedHD =5e-3;
+b_pos = 1e0; b_hd = 5e-3;  b_speed = 5e-3; b_speedHD =5e-3;
 
 if config.fCoupling
    spikeHistoryParam = param(2:1 + numOfCouplingParams); 

@@ -37,7 +37,7 @@ for i  = 1:numBin
     end
 end
 
-
+tuning_curve(isnan(tuning_curve)) = 0;
 %% smooth the tuning curve
 
 % % fill in the NaNs with neigboring values
@@ -63,9 +63,19 @@ end
 %     
 % end
 
-%smooth with Gaussian
-H = fspecial('gaussian'); % using default values - size=[3 3] and sigma=0.5
-tuning_curve = imfilter(tuning_curve,H);
+BIN = 3;
+FilterSize=10; %in cm
+FilterSize=FilterSize/2;
+ind = -FilterSize/BIN : FilterSize/BIN; % 
+[X Y] = meshgrid(ind, ind);
+sigma=10.5; %in cm;
+sigma=sigma/BIN;
+%// Create Gaussian Mask
+h = exp(-(X.^2 + Y.^2) / (2*sigma*sigma));
+%// Normalize so that total area (sum of all weights) is 1
+h = h / sum(h(:));
+tuning_curve = filter2(h,tuning_curve);
+
 
 
 return

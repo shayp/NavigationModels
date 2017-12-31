@@ -15,10 +15,10 @@ posXAxes = linspace(0, config.boxSize(1), config.numOfPositionAxisParams);
 posYAxes = linspace(config.boxSize(2),0, config.numOfPositionAxisParams);
 speedHDBins = linspace(0, config.maxSpeed, config.numOfHDSpeedBins);
 figure();
+scale_factor = exp(modelParams.biasParam);
 if numel(modelParams.pos_param) == config.numOfPositionParams
     currentIndex = currentIndex + 1;
-    scale_factor_pos = exp(modelParams.biasParam)*mean(exp(modelParams.hd_param))*mean(exp(modelParams.speed_param))*mean(exp(modelParams.speed_param));
-    pos_response = scale_factor_pos*exp(modelParams.pos_param);
+    pos_response = scale_factor*exp(modelParams.pos_param);
     subplot(numOfRows,2,currentIndex)
     imagesc(posXAxes, fliplr(posYAxes),reshape(pos_response,config.numOfPositionAxisParams,config.numOfPositionAxisParams)); colorbar;
     axis square
@@ -30,29 +30,21 @@ end
 
 if  numel(modelParams.hd_param) == config.numOfHeadDirectionParams
     currentIndex = currentIndex + 1;
-    scale_factor_hd = exp(modelParams.biasParam)*mean(exp(modelParams.pos_param))*mean(exp(modelParams.speed_param))*mean(exp(modelParams.speed_param));
-    hd_response = scale_factor_hd * exp(modelParams.hd_param);
+    hd_response = scale_factor * exp(modelParams.hd_param);
     subplot(numOfRows,2,currentIndex)
-    plot(hd_vector,hd_response,'k','linewidth',3)
+    polarplot([hd_vector hd_vector(1)],[hd_response hd_response(1)],'k','linewidth',2);
     title('Learned head direction curve');
-    xlabel('angle')
-    axis square
-    axis([0 2*pi -inf inf])
-    box off
-    xlabel('angle ')
-    ylabel('Spikes/s');
 end
 
 
 if numel(modelParams.speed_param) == config.numOfSpeedBins
     currentIndex = currentIndex + 1;
     % compute the scale factors
-    scale_factor_speed = exp(modelParams.biasParam)*mean(exp(modelParams.pos_param))*mean(exp(modelParams.hd_param))*mean(exp(modelParams.speed_param));
 
     % compute the model-derived response profiles
-    speed_response = scale_factor_speed*exp(modelParams.speed_param);
+    speed_response = scale_factor*exp(modelParams.speed_param);
     subplot(numOfRows,2,currentIndex)
-    plot(speedBins, speed_response);
+    plot(speedBins, speed_response,'k','linewidth',3);
     axis square
     title('Learned speed curve');
     xlabel('speed (cm/s)')
@@ -62,11 +54,9 @@ end
 
 if numel(modelParams.speedHD_param) == config.numOfHDSpeedBins
     currentIndex = currentIndex + 1;
-    % compute the scale factors
-    scale_factor_speedHD = exp(modelParams.biasParam)*mean(exp(modelParams.pos_param))*mean(exp(modelParams.hd_param))*mean(exp(modelParams.speed_param));
 
     % compute the model-derived response profiles
-    speedHD_response = scale_factor_speedHD*exp(modelParams.speedHD_param);
+    speedHD_response = scale_factor*exp(modelParams.speedHD_param);
     subplot(numOfRows,2,currentIndex)
     plot(speedHDBins,speedHD_response,'k','linewidth',3)
     title('Learned velocity curve');
@@ -87,26 +77,31 @@ else
 end
 
 if config.fCoupling
-    numOfPlots = numOfCoupledNeurons + 1;
+    numOfPlots = 2;
     figure();
     currentIndex =  1;
     historyLen = length(modelParams.spikeHistory);
     timeSeriesHistory = linspace(1 * config.dt, historyLen * config.dt, historyLen);
-    subplot(ceil(numOfPlots / 2) ,2,currentIndex)
-    plot(timeSeriesHistory, exp(modelParams.spikeHistory));
+    dashline = ones(historyLen,1);
+    subplot(2 ,1,1)
+    plot(timeSeriesHistory, exp(modelParams.spikeHistory), timeSeriesHistory, dashline, '--r');
     title('Spike history filter');
     xlabel('time (seconds)')
     ylabel('Intensity');
-    for j = 1:numOfCoupledNeurons
-        currentIndex = currentIndex + 1;
-        subplot(ceil(numOfPlots / 2) ,2,currentIndex)
-        couplingLen = length(modelParams.couplingFilters(:,j));
+    if numOfCoupledNeurons > 0
+        couplingLen = length(modelParams.couplingFilters(:,1));
         timeSeriesCoupling = linspace(1 * config.dt, couplingLen * config.dt, couplingLen);
-        plot(timeSeriesCoupling, exp(modelParams.couplingFilters(:,j)));
-        title(['Coupling filter - Neuron ' num2str(coupledNeurons(j))]);
+        dashline = ones(couplingLen,1);
+        subplot(2 ,1,2)
+        legendLabels = strtrim(cellstr(num2str(coupledNeurons'))');
+
+        semilogy(timeSeriesCoupling, exp(modelParams.couplingFilters), timeSeriesCoupling, dashline, '--r')
         xlabel('time (seconds)')
         ylabel('Intensity');
+        title('Coupling filters');
+        legend(legendLabels, 'Location', 'bestoutside');
     end
+
     
     if numOfCoupledNeurons > 0
         savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_Coupled_interactionLearned_' titleEnd]);

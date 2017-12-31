@@ -41,15 +41,15 @@ spiketrain = zeros(lengthOfExp, 1);
 spikeTimes = floor(cellTS * 1000) - 20;
 spiketrain = double(ismember(1:lengthOfExp, spikeTimes))';
 
-% figure();
+%figure();
  spikedInd = find(spiketrain);
 
-plot(posx, posy, posx(spikedInd), posy(spikedInd), '*');
-title(['neuron: ' num2str(neuronNumber)]);
-xlim([0 100]);
-ylim([0 100]);
-drawnow;
-savefig(['./trajectory_neuron_' num2str(neuronNumber)]);
+% plot(posx, posy, posx(spikedInd), posy(spikedInd), '*');
+% title(['neuron: ' num2str(neuronNumber)]);
+% xlim([0 100]);
+% ylim([0 100]);
+% drawnow;
+%savefig(['./trajectory_neuron_' num2str(neuronNumber)]);
 mkdir(['../../GLM/rawDataForLearning/'  sessionName]);
 save(['../../GLM/rawDataForLearning/'  sessionName '/data_for_cell_'  num2str(neuronNumber)], 'boxSize', 'post', 'posx', 'posy', 'sampleRate', 'headDirection', 'spiketrain');
 save(['../../GLM/rawDataForLearning/'  sessionName '/'  num2str(neuronNumber) '_' neuronName], 'boxSize', 'post', 'posx', 'posy', 'sampleRate', 'headDirection', 'spiketrain');

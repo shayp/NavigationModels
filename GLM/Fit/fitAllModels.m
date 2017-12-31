@@ -57,13 +57,18 @@ Models{12} = [posgrid];
 Models{13} = [hdgrid];
 Models{14} = [speedgrid];
 Models{15} = [speedHDGrid];
-
-
 % compute the number of folds we would like to do
 numFolds = config.numFolds;
-
-for n = 1:numModels
+selected_models = [2 6 7 9 12 13 14];
+for n = selected_models
     fprintf('\t- Fitting model %d of %d\n', n, numModels);
     [testFit{n},trainFit{n},param{n}] = fit_model(Models{n},  learnedParameters.spiketrain, ...
         config.filter, modelType{n}, numFolds, config, features.designMatrix);
+end
+
+notselected = setdiff(1:numModels, selected_models);
+for j = notselected
+    testFit{j} =  nan(numFolds,6);
+    trainFit{j} =  nan(numFolds,6);
+    param{j} = 0;
 end
