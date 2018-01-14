@@ -3,7 +3,7 @@
 % performance, the model-derived tuning curves, and the firing rate tuning
 % curves.
 function plotPerformanceAndParameters(config, modelParams, modelMetrics, expFiringRate, ...
-    simFiringRate, neuronNumber, titleEnd, numOfCoupledNeurons, ISI,expISI,  sessionName, modelFiringRate, validationData, coupledNeurons)
+    simFiringRate, neuronNumber, titleEnd, numOfCoupledNeurons, ISI,expISI,  sessionName, modelFiringRate, validationData, coupledNeurons, log_ll)
 
 currentIndex = 0;
 numOfRows = ceil(modelParams.numOfFilters / 2);
@@ -13,7 +13,7 @@ speedBins = linspace(0, config.maxSpeed, config.numOfSpeedBins);
 
 posXAxes = linspace(0, config.boxSize(1), config.numOfPositionAxisParams);
 posYAxes = linspace(config.boxSize(2),0, config.numOfPositionAxisParams);
-speedHDBins = linspace(0, config.maxSpeed, config.numOfHDSpeedBins);
+thetaBins = linspace(0, 2 * pi, config.numOfTheta);
 figure();
 scale_factor = exp(modelParams.biasParam);
 if numel(modelParams.pos_param) == config.numOfPositionParams
@@ -52,18 +52,14 @@ if numel(modelParams.speed_param) == config.numOfSpeedBins
     box off
 end
 
-if numel(modelParams.speedHD_param) == config.numOfHDSpeedBins
+if numel(modelParams.theta_param) == config.numOfTheta
     currentIndex = currentIndex + 1;
 
     % compute the model-derived response profiles
-    speedHD_response = scale_factor*exp(modelParams.speedHD_param);
+    theta_response = scale_factor*exp(modelParams.theta_param);
     subplot(numOfRows,2,currentIndex)
-    plot(speedHDBins,speedHD_response,'k','linewidth',3)
-    title('Learned velocity curve');
-    xlabel('direction speed (cm/s)')
-    ylabel('Spikes/s');
-    box off
-    axis square
+    polarplot([thetaBins thetaBins(1)],[theta_response theta_response(1)],'k','linewidth',2)
+    title('Learned theta curve');
 end
 
 if config.fCoupling == 1
@@ -95,7 +91,7 @@ if config.fCoupling
         subplot(2 ,1,2)
         legendLabels = strtrim(cellstr(num2str(coupledNeurons'))');
 
-        semilogy(timeSeriesCoupling, exp(modelParams.couplingFilters), timeSeriesCoupling, dashline, '--r')
+        plot(timeSeriesCoupling, exp(modelParams.couplingFilters), timeSeriesCoupling, dashline, '--r')
         xlabel('time (seconds)')
         ylabel('Intensity');
         title('Coupling filters');
@@ -132,14 +128,14 @@ mkdir(['./Graphs/' sessionName '/']);
 
 if config.fCoupling == 1
     if numOfCoupledNeurons > 0
-        save(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_Coupled_Results_' titleEnd], 'modelParams', 'modelMetrics');
+        save(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_Coupled_Results_' titleEnd], 'modelParams', 'modelMetrics', 'log_ll');
         savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_Coupled_ModelResponse_' titleEnd]);
     else
-        save(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_history_Results_' titleEnd], 'modelParams', 'modelMetrics');
+        save(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_history_Results_' titleEnd], 'modelParams', 'modelMetrics', 'log_ll');
         savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_history_ModelResponse_' titleEnd]);
     end
 else
-    save(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_Results_' titleEnd], 'modelParams', 'modelMetrics');
+    save(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_Results_' titleEnd], 'modelParams', 'modelMetrics', 'log_ll');
     savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_ModelResponse_' titleEnd]);
 end
 

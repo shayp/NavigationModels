@@ -1,4 +1,4 @@
-function plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, speedHD_curve, neuronNumber, learningData, sessionName)
+function plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName)
 % create x-axis vectors
 hd_vector =  linspace(0, 2 * pi, config.numOfHeadDirectionParams);
 speedBins = linspace(0, config.maxSpeed, config.numOfSpeedBins);
@@ -39,12 +39,9 @@ ylabel('Spikes/s');
 
 
 subplot(3,2,5)
-plot(features.speedHDBins,speedHD_curve,'k','linewidth',3)
-box off
-axis square
-xlabel('direction speed (cm/s)')
-ylabel('Spikes/s');
-title('Experiment velocity curve')
+polarplot([features.thetaVec features.thetaVec(1)],[theta_curve; theta_curve(1)],'k','linewidth',3)
+
+title('Experiment theta curve')
 mkdir(['./Graphs/' sessionName]);
 savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) 'expeimentCurves']);
 

@@ -1,7 +1,7 @@
 clear all;
 addpath('General');
 dt = 0.001
-[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(10, 1/1000, [0.005 0.03], 0.5, 0.001);
+[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(5, 1/1000, [0.001 0.045], 1, 0);
 figure();
 lenOfVec  = size(couplingBaseVectors,1);
 time = linspace(dt, lenOfVec * dt, lenOfVec);
@@ -9,14 +9,14 @@ plot(time, couplingBaseVectors);
 title('coupling base vectors');
 xlabel('time (seconds)');
 
-
-[~, ~, historygBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(15, 1/1000, [0.003 0.17], 0.005, 0.002);
-figure();
-lenOfVec  = size(historygBaseVectors,1);
-time = linspace(dt, lenOfVec * dt, lenOfVec);
-plot(time, historygBaseVectors);
-title('History base vectors');
-xlabel('time (seconds)');
+% 
+% [~, ~, historygBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(20, 1/1000, [0.003 0.17],0.02, 0.002);
+% figure();
+% lenOfVec  = size(historygBaseVectors,1);
+% time = linspace(dt, lenOfVec * dt, lenOfVec);
+% plot(time, historygBaseVectors);
+% title('History base vectors');
+% xlabel('time (seconds)');
 
 % files = dir('Graphs/11138-07040501/Neuron_*_history_Results_single.mat');
 % numNeurons = length(files)

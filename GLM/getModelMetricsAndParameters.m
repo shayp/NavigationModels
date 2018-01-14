@@ -1,28 +1,29 @@
-function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiringRate] = ...
+function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiringRate, log_likekihood_final] = ...
     getModelMetricsAndParameters(config, spiketrain, stimulus, modelParams,...
-    modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors)
+    modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors, thetaPhase, kFoldParams)
 
 numOfFilters = 4;
 
 % Set learned bias
 learnedParams.biasParam = modelParams(1);
-
+numFolds = size(kFoldParams,1);
 if config.fCoupling
     
     couplingParamsLength = config.numOfCouplingParams * numOfCoupledNeurons;
    
    
     % Set spike history filter
-    learnedParams.spikeHistory = historyBaseVectors * modelParams(2:1 + config.numOfHistoryParams)';
+    learnedParams.spikeHistory = mean(historyBaseVectors * kFoldParams(:, 2:1 + config.numOfHistoryParams)', 2);
    
     if numOfCoupledNeurons > 0
         % Set coupling fiilters
+        kFoldcouplingParams = reshape(kFoldParams(:,2 + config.numOfHistoryParams:couplingParamsLength + config.numOfHistoryParams + 1), numFolds, config.numOfCouplingParams, numOfCoupledNeurons);
         couplingParams = reshape(modelParams(2 + config.numOfHistoryParams:couplingParamsLength + config.numOfHistoryParams + 1), config.numOfCouplingParams, numOfCoupledNeurons);
 
         for i = 1:numOfCoupledNeurons
-            learnedParams.couplingFilters(:,i) = couplingBaseVectors * couplingParams(:, i);
+            learnedParams.couplingFilters(:,i) = mean(couplingBaseVectors * kFoldcouplingParams(:,:, i)', 2);
         end
-            end
+    end
     
     % Set tuning params
     tuningParams = modelParams(2 + config.numOfHistoryParams + couplingParamsLength:end);
@@ -34,13 +35,28 @@ end
 simulationLength = length(spiketrain);
 modelFiringRate = zeros(simulationLength, config.numOfRepeats);
 simISI = [];
+mean_fr = nanmean(spiketrain);
+log_llh_mean = nansum(mean_fr - spiketrain .* log(mean_fr) + log(factorial(spiketrain))) / sum(spiketrain);
+log_likekihood_final = 0;
+selectedInd = 0;
 for i = 1:config.numOfRepeats
     % Get simulated firing rate
-    modelFiringRate(:,i) = simulateResponsePillow(stimulus, tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt);   
-    simISI = [simISI diff(find(modelFiringRate(:,i)))'];
+    [modelFiringRate(:,i), modelLambdas] = simulateResponsePillow(stimulus, tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config, config.fTheta, thetaPhase,0, spiketrain);   
+    log_llh_model = nansum(modelLambdas - spiketrain.*log(modelLambdas) + log(factorial(spiketrain))) / sum(spiketrain);
+    log_llh = log(2) * (-log_llh_model + log_llh_mean);
+    if log_llh > -1
+        selectedInd = selectedInd + 1;
+        log_likekihood_final = log_likekihood_final + log_llh;
+        simISI = [simISI diff(find(modelFiringRate(:,i)))'];
+        %modelFiringRate(:,i) = modelLambdas;
+    else
+        modelFiringRate(:,i) = modelFiringRate(:,i) -  modelFiringRate(:,i);
+    end
 end
-
-summedFiringRate = sum(modelFiringRate,2) / config.numOfRepeats;
+log_likekihood_final = log_likekihood_final / selectedInd;
+log_likekihood_final
+selectedInd
+summedFiringRate = sum(modelFiringRate,2) / selectedInd;
 
 % Get psth and metrics 
 [metrics, smoothPsthExp, smoothPsthSim, ISI] = ...
@@ -58,9 +74,9 @@ ISI.simISITimes = simISITimes;
 ISI.simISIPr = simISIPr;
 
 % Get the learned tuning curves
-[learnedParams.pos_param, learnedParams.hd_param, learnedParams.speed_param, learnedParams.speedHD_param] = ...
+[learnedParams.pos_param, learnedParams.hd_param, learnedParams.speed_param, learnedParams.theta_param] = ...
     find_param(tuningParams, modelType, config.numOfPositionParams, config.numOfHeadDirectionParams, ...
-    config.numOfSpeedBins, config.numOfHDSpeedBins);
+    config.numOfSpeedBins, config.numOfTheta);
 
 % IF the curves are not configured in the model, zeroize
 if numel(learnedParams.pos_param) ~= config.numOfPositionParams
@@ -75,8 +91,8 @@ if numel(learnedParams.speed_param) ~= config.numOfSpeedBins
     learnedParams.speed_param = 0;
     numOfFilters = numOfFilters - 1;
 end
-if numel(learnedParams.speedHD_param) ~= config.numOfHDSpeedBins
-    learnedParams.speedHD_param = 0;
+if numel(learnedParams.theta_param) ~= config.numOfTheta
+    learnedParams.theta_param = 0;
     numOfFilters = numOfFilters - 1;
 end
 

@@ -7,7 +7,7 @@
 % mean-squared error, the log-likelihood increase, and the mean square
 % error will be computed for each test data set. In addition, the learned
 % parameters will be recorded for each section.
-function [testFit,trainFit,param_mean] = fit_model(features, spiketrain, filter, modelType, numFolds, config, designMatrix)
+function [testFit,trainFit,param_mean, paramMat] = fit_model(features, spiketrain, filter, modelType, numFolds, config, designMatrix)
 
 %% Initialize matrices and section the data for k-fold cross-validation
 modelType
@@ -52,7 +52,7 @@ for k = 1:numFolds
         train_designMat = designMatrix(train_ind,:);
     end
     opts = optimset('Gradobj','on','Hessian','on','Display','off');
-    
+    %opts = optimset('Gradobj','on','Hessian','on','Display','on', 'MaxIter', 200, 'TolFun', 1e-3);
     trainData{1} = train_features;
     testData{1} = test_features;
 
@@ -64,12 +64,13 @@ for k = 1:numFolds
     testData{3} = test_spikes;
 
     if k == 1
-        init_param = zeros(numOfLearnedParams, 1);
-        init_param(1) = -10;
+        init_param =  1e-3*randn(numOfLearnedParams, 1);
+        %init_param(1) = -10;
     else
         init_param = param;
+        %init_param =  1e-3*randn(numOfLearnedParams, 1);
         %init_param = zeros(numOfLearnedParams, 1);
-        init_param(1) = -10;
+        %init_param(1) = -10;
     end
     lossFunc  = @(param)ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
     [param] = fminunc(lossFunc, init_param, opts);

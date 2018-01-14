@@ -5,6 +5,7 @@ simulationLength = length(realFiringRate);
 simNumOfSpikes = sum(modelFiringRate)
 expNumOfSpikes = sum(realFiringRate)
 
+
 psthLength = ceil(simulationLength / windowSize);
 psthSim = zeros(psthLength, 1);
 psthExp = zeros(psthLength, 1);

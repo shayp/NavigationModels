@@ -7,7 +7,7 @@ biasParam = param(1);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
-b_pos = 1e0; b_hd = 5e-3;  b_speed = 5e-3; b_speedHD =5e-3;
+b_pos = 4e0; b_hd = 5e-3;  b_speed = 5e-3; b_Theta =5e-3;
 
 if config.fCoupling
    spikeHistoryParam = param(2:1 + numOfCouplingParams); 
@@ -61,9 +61,9 @@ end
 J_pos = 0; J_pos_g = []; J_pos_h = []; 
 J_hd = 0; J_hd_g = []; J_hd_h = [];  
 J_speed = 0; J_speed_g = []; J_speed_h = [];  
-J_speedHD = 0; J_speedHD_g = []; J_speedHD_h = [];  
+J_theta = 0; J_theta_g = []; J_theta_h = [];  
 % find the parameters
-[param_pos,param_hd,param_speed, param_speedHD] = find_param(tuningParams, modelType, config.numOfPositionParams,config.numOfHeadDirectionParams, config.numOfSpeedBins, config.numOfHDSpeedBins);
+[param_pos,param_hd,param_speed, param_theta] = find_param(tuningParams, modelType, config.numOfPositionParams,config.numOfHeadDirectionParams, config.numOfSpeedBins, config.numOfTheta);
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
@@ -78,15 +78,24 @@ if ~isempty(param_speed)
     [J_speed,J_speed_g,J_speed_h] = rough_penalty_1d(param_speed,b_speed);
 end
 
-if ~isempty(param_speedHD)
-    [J_speedHD,J_speedHD_g,J_speedHD_h] = rough_penalty_1d(param_speedHD,b_speedHD);
+if ~isempty(param_theta)
+    [J_theta,J_theta_g,J_theta_h] = rough_penalty_1d_circ(param_theta,b_Theta);
 end
 
 %% compute f, the gradient, and the hessian 
-f = logLL + J_pos + J_hd + J_speed + J_speedHD;
-dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_speed_g; J_speedHD_g];
+J_History = 0;
+dlCoupled = [];
+if config.fCoupling && config.numOfHistoryParams
+%     J_couled = 5e-1 * sum(abs(spikeHistoryParam(config.numOfHistoryParams:end)));
+%     dlCoupled = 5e-1 * sign(spikeHistoryParam(config.numOfHistoryParams:end));
+    J_History = 5e-1 * sum(abs(spikeHistoryParam));
+    dlHistory = dlHistory + 5e-1 * sign(spikeHistoryParam);
+    %dlHistory(config.numOfHistoryParams:end) = dlHistory(config.numOfHistoryParams:end) + dlCoupled;
+end
+f = logLL + J_pos + J_hd + J_speed + J_theta + J_History;
+dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_speed_g; J_theta_g];
 df = [dlBias; dlHistory; dlTuningParams];
-HTuning = HTuning + blkdiag(J_pos_h,J_hd_h, J_speed_h, J_speedHD_h);
+HTuning = HTuning + blkdiag(J_pos_h,J_hd_h, J_speed_h, J_theta_h);
 hessian = [[HBias HHistoryBias' HTuningBias']; [HHistoryBias HHistory HTuningHistory']; [HTuningBias HTuningHistory HTuning]];
 
 

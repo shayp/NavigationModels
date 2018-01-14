@@ -1,19 +1,20 @@
-function [config, learningData, couplingData, validationData, validationCouplingData, isi, posx, posy, boxSize,sampleRate,headDirection] = loadDataForLearning(folderPath,  configFilePath, neuronNumber, fCoupling, coupledNeurons)
+function [config, learningData, couplingData, validationData, validationCouplingData, isi, posx, posy, boxSize,sampleRate,headDirection, phase] = loadDataForLearning(folderPath,  configFilePath, neuronNumber, fCoupling, coupledNeurons)
 load(configFilePath);
 
 % Define num of learned parameters for learning
 config.numOfHeadDirectionParams = 30;
 config.numOfHDSpeedBins = 10;
 config.numOfSpeedBins = 10;
+config.numOfTheta = 10;
 
-config.numOfPositionAxisParams = numOfPositionAxisParams;
+config.numOfPositionAxisParams = 25;
 config.numOfPositionParams = config.numOfPositionAxisParams * config.numOfPositionAxisParams;
-config.numofTuningParams = config.numOfHeadDirectionParams + config.numOfHDSpeedBins + config.numOfPositionParams + config.numOfSpeedBins;
+config.numofTuningParams = config.numOfHeadDirectionParams + config.numOfTheta + config.numOfPositionParams + config.numOfSpeedBins;
 % define limits of bins
 
 config.boxSize = boxSize;
 
-config.windowSize = 5;
+config.windowSize = 20;
 config.fCoupling = fCoupling;
 % define temporal difference
 config.sampleRate = 1000;
@@ -23,16 +24,16 @@ config.numFolds = 10;
 config.numModels = 15;
 config.maxSpeed = 50;
 % History and coupling config
-config.numOfHistoryParams = 15;
+config.numOfHistoryParams = 25;
 %config.numOfCouplingParams = 20;
 config.numOfCouplingParams = 10;
 
 config.lastPeakHistory = 0.17;
-config.bForHistory = config.dt * 5;
+config.bForHistory = 0.02;
 %config.lastPeakCoupling = 0.025;
 
-config.lastPeakCoupling = 0.03;
-config.bForCoupling = 0.5;
+config.lastPeakCoupling = 0.045;
+config.bForCoupling = 1;
 config.numOfRepeats = 200;
 
 % compute a filter, which will be used to smooth the firing rate
@@ -49,12 +50,26 @@ maxBins = ceil(length(posx) * 0.1);
 learningData.neuronNumber = neuronNumber;
 learningData.posx = posx(maxBins + 1:end);
 learningData.posy = posy(maxBins + 1:end);
+learningData.thetaPhase = phase(maxBins + 1:end);
 learningData.headDirection = headDirection(maxBins + 1:end);
 learningData.spiketrain = spiketrain(maxBins + 1:end);
+spikeT = find(learningData.spiketrain);
+diffSpikeT = [spikeT(1); spikeT];
+learnedISI = diff(diffSpikeT);
+isiInd = learnedISI > 50;
+spikingTheta = learningData.thetaPhase(spikeT);
+[histVals, histEdges] = histcounts(spikingTheta(isiInd), 15);
 
+[maxTheta, indTheta] = max(histVals);
+config.fTheta = 1;
+config.maxTheta = maxTheta;
+config.startThetaBin  = histEdges(indTheta);
+config.endThetaBin  = histEdges(indTheta + 1);
 validationData.neuronNumber = neuronNumber;
 validationData.posx = posx(1:maxBins);
 validationData.posy = posy(1:maxBins);
+
+validationData.thetaPhase = phase(1:maxBins);
 validationData.headDirection = headDirection(1:maxBins);
 validationData.spiketrain = spiketrain(1:maxBins);
 spikeDistance = diff(find(spiketrain));
@@ -73,9 +88,8 @@ historyPeaks = [firstPeak config.lastPeakHistory];
 couplingPeaks = [0.005 config.lastPeakCoupling];
 
 [~, ~, learningData.historyBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfHistoryParams, config.dt, historyPeaks, config.bForHistory, learningData.refreactoryPeriod);
-
 [~, ~, learningData.couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfCouplingParams, config.dt, couplingPeaks, config.bForCoupling, config.dt);
-% learningData.couplingBaseVectors = buildBaseVectors(config.numOfCouplingParams);
+%[~, ~, learningData.couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfCouplingParams, config.dt, [config.dt config.lastPeakCoupling] , config.bForCoupling, 0);
 
 couplingData = [];
 validationCouplingData = [];

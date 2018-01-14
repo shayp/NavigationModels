@@ -1,7 +1,7 @@
 clear all;
 %profile on
-sessionName = '11084-03020501';
-neurons = [1 2 3 5 6];
+sessionName = '11025-19050503';
+neurons = [1 3];
 
 folderPath = strcat('C:\projects\NavigationModels\GLM\rawDataForLearning\', sessionName);
 configFilePath = ['C:\projects\NavigationModels\GLM\rawDataForLearning\' 'config'];
@@ -17,6 +17,7 @@ end
 
 %% single neurons, history
 fCoupling = 1;
+
 coupledNeurons = [];
 for neuronNumber = 1:length(neurons)
 
