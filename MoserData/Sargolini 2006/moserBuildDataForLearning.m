@@ -61,14 +61,14 @@ if length(phaseNan2) > 0
     'error'
 end
 spiketrain(phaseNan) = []; posx(phaseNan) = []; posy(phaseNan) = []; headDirection(phaseNan) = [];
+timeToCut = 30;
+% posx(1:timeToCut) = [];
+% posy(1:timeToCut) = [];
+% headDirection(1:timeToCut) = [];
+% spiketrain(end - 30 + 1:end) = [];
+% phase(end - 30 + 1:end) = [];
 
-% add the extra just to make the vectors the same size
-% velx = diff([posx(1); posx]);
-% vely = diff([posy(1); posy]); 
-% 
-% speed = sqrt(velx.^2+vely.^2) * sampleRate;
-% speedInd = speed < 5;
-% spiketrain(speedInd) = []; posx(speedInd) = []; posy(speedInd) = []; headDirection(speedInd) = []; phase(speedInd) = [];
+
 
 mkdir(['../../GLM/rawDataForLearning/'  sessionName]);
 save(['../../GLM/rawDataForLearning/'  sessionName '/data_for_cell_'  num2str(neuronNumber)], 'boxSize', 'post', 'posx', 'posy', 'sampleRate', 'headDirection', 'spiketrain', 'phase');

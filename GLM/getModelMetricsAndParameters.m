@@ -1,6 +1,6 @@
 function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiringRate, log_likekihood_final] = ...
     getModelMetricsAndParameters(config, spiketrain, stimulus, modelParams,...
-    modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors, thetaPhase, kFoldParams)
+    modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors, thetaGrid, kFoldParams)
 
 numOfFilters = 4;
 
@@ -31,7 +31,15 @@ else
     % Set tuning params
     tuningParams = modelParams(2:end);
 end
-
+config.fTheta = 0;
+learnedParams.allTuningParams = tuningParams;
+if sum(config.thetaMask & modelType) > 0
+    config.fTheta = 1;
+    learnedParams.thetaParam = tuningParams(end - config.numOfTheta + 1:end);
+    tuningParams = tuningParams(1:end - config.numOfTheta);
+end
+learnedParams.tuningParams = tuningParams;
+learnedParams.modelType = modelType;
 simulationLength = length(spiketrain);
 modelFiringRate = zeros(simulationLength, config.numOfRepeats);
 simISI = [];
@@ -39,9 +47,10 @@ mean_fr = nanmean(spiketrain);
 log_llh_mean = nansum(mean_fr - spiketrain .* log(mean_fr) + log(factorial(spiketrain))) / sum(spiketrain);
 log_likekihood_final = 0;
 selectedInd = 0;
+
 for i = 1:config.numOfRepeats
     % Get simulated firing rate
-    [modelFiringRate(:,i), modelLambdas] = simulateResponsePillow(stimulus, tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config, config.fTheta, thetaPhase,0, spiketrain);   
+    [modelFiringRate(:,i), modelLambdas] = simulateResponsePillow(stimulus, tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config, config.fTheta, thetaGrid,0, spiketrain);   
     log_llh_model = nansum(modelLambdas - spiketrain.*log(modelLambdas) + log(factorial(spiketrain))) / sum(spiketrain);
     log_llh = log(2) * (-log_llh_model + log_llh_mean);
     if log_llh > -1
@@ -75,7 +84,7 @@ ISI.simISIPr = simISIPr;
 
 % Get the learned tuning curves
 [learnedParams.pos_param, learnedParams.hd_param, learnedParams.speed_param, learnedParams.theta_param] = ...
-    find_param(tuningParams, modelType, config.numOfPositionParams, config.numOfHeadDirectionParams, ...
+    find_param(learnedParams.allTuningParams, modelType, config.numOfPositionParams, config.numOfHeadDirectionParams, ...
     config.numOfSpeedBins, config.numOfTheta);
 
 % IF the curves are not configured in the model, zeroize

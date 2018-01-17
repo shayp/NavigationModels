@@ -1,4 +1,4 @@
-function [response, lambdas] = simulateResponsePillow(stimulus, tuningCurves, learnedParams, fCoupling,  numOfCoupledNeurons, couplingData, dt, config, fTheta, thetainfo,fPlot,realSpikes)
+function [response, lambdas] = simulateResponsePillow(stimulus, tuningCurves, learnedParams, fCoupling,  numOfCoupledNeurons, couplingData, dt, config, fTheta, thetaGrid,fPlot,realSpikes)
 
 simulationLength = size(stimulus, 1);
 response = zeros(simulationLength, 1);
@@ -18,7 +18,9 @@ baseValue = stimulus * tuningCurves' + learnedParams.biasParam;
 if fCoupling
     spikeHistoryFilterLength = length(learnedParams.spikeHistory);
     for j = 1:numOfCoupledNeurons
-        baseValue = baseValue + conv(couplingData.data(j).spiketrain, learnedParams.couplingFilters(:,j), 'same');
+        coupledConv = conv2(couplingData.data(j).spiketrain, learnedParams.couplingFilters(:,j),'full');
+        coupledConv = [0; coupledConv(1:end - length(learnedParams.couplingFilters(:,j)))];
+        baseValue = baseValue + coupledConv;
     end
 end
 
@@ -27,26 +29,21 @@ nsp =0;
 tspnext = exprnd(1);
 currentBin= 1;
 spikeInd = 0;
+
 while currentBin < simulationLength 
-     if (fTheta && fCoupling && currentBin - spikeInd > 45 && thetainfo(currentBin) > config.startThetaBin &&...
-         thetainfo(currentBin) < config.endThetaBin  && baseValue(currentBin) > 0)
-     
-            factor = min(3,ceil((currentBin - spikeInd) / 50));
-            baseValue(currentBin) =  baseValue(currentBin) * factor;
+     if (fTheta && currentBin - spikeInd > config.isiToCount)
+        baseValue(currentBin) =  baseValue(currentBin) + learnedParams.thetaParam * thetaGrid(currentBin,:)';
     end
     iinxt = currentBin:min(currentBin+nbinsPerEval-1,simulationLength);
     mixedStimulus(iinxt) = baseValue(iinxt) + historyValue(iinxt);
     rnxt=  exp(mixedStimulus(iinxt)) * dt; % Cond Intensity
     rnxt = min(1, rnxt);
     lambdas(iinxt) = rnxt;
-    if lambdas(iinxt) <  dt
-        lambdas(iinxt) = lambdas(iinxt) / 10;
 
-    end
-    rrcum = cumsum(lambdas(iinxt)) + rprev;  % Cumulative intensity
-    if (tspnext >= rrcum(end)) % No spike in this window
+    rrcum = lambdas(iinxt) + rprev;  % Cumulative intensity
+    if (tspnext >= rrcum) % No spike in this window
             currentBin = iinxt(end)+1;
-            rprev = rrcum(end);
+            rprev = rrcum;
     else % Spike!
         ispk =  iinxt(find(rrcum>=tspnext, 1, 'first'));
         nsp = nsp + 1;

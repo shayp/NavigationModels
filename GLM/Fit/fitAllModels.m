@@ -61,8 +61,7 @@ Models{14} = [speedgrid];
 Models{15} = [thetaGrid];
 % compute the number of folds we would like to do
 numFolds = config.numFolds;
-selected_models = [12];
-%selected_models = [12 8];
+selected_models = [8 12];
 %selected_models = 1:numModels;
 for n = selected_models
     fprintf('\t- Fitting model %d of %d\n', n, numModels);

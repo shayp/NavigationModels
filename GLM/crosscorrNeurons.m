@@ -26,8 +26,8 @@ spikeHistory2 = find(spiketrain);
 
 load(['rawDataForLearning/' networkName '/coupled_simulated_data_cell_'  num2str(neuron2)]);
 spikeCoupled2 = find(spiketrain);
- T = -205.5:10:205.5;
- Tout = -200:10:200;
+ T = -105.5:10:105.5;
+ Tout = -100:10:100;
 %T = -200.5:1:200.5;
 %Tout = -200:1:200;
 [corrReal1] = MyCrossCorrMS(spikeExp1,spikeExp2, T);
@@ -40,39 +40,39 @@ spikeCoupled2 = find(spiketrain);
 [corrHistory2] = MyCrossCorrMS(spikeExp2, spikeHistory1, T);
 [corrCoupled2] = MyCrossCorrMS(spikeExp2,spikeCoupled1, T);
 
-[corrReal3] = MyCrossCorrMS(spikeExp1,spikeExp2, T);
-[corrNoHistory3] = MyCrossCorrMS(spikeNoHistory1,spikeNoHistory2, T);
-[corrHistory3] = MyCrossCorrMS(spikeHistory1,spikeHistory2,T);
-[corrCoupled3] = MyCrossCorrMS(spikeCoupled1,spikeCoupled2, T);
+load(['rawDataForLearning/' networkName '/fully_simulated_'  num2str(neuron1)]);
+fullySimulated1 = find(spiketrain);
+
+load(['rawDataForLearning/' networkName '/fully_simulated_'  num2str(neuron2)]);
+fullySimulated2 = find(spiketrain);
+
+[corrFully1] = MyCrossCorrMS(fullySimulated1,fullySimulated2, T);
+[corrFully2] = MyCrossCorrMS(fullySimulated2,fullySimulated1, T);
 
 figure();
-subplot(1,2,1);
-plot(Tout, corrReal2,Tout, corrHistory2, Tout, corrCoupled2,'lineWidth', 2);
-legend('Real', 'history', 'Coupled');
+
+plot(Tout, corrReal2,Tout,corrFully2, Tout, corrCoupled2 , Tout, corrHistory2,'lineWidth', 2);
+legend('Experiment','Coupled - Simultaneously', ['Coupled - Separately, neuron ' num2str(neuron1)], 'History');
 
 xlabel('time (ms)');
 ylabel('Cross correlation');
-title(['Cross correlation - Neuron ' num2str(neuron1) ' simulated']);
-%ylim([0 0.3]);
-ylim([0 inf]);
+title(['Cross correlation - First side']);
+ylim([0 0.3]);
+%ylim([0 inf]);
 
-subplot(1,2,2);
+figure();
 
+plot(Tout, corrReal1,Tout,corrFully1, Tout, corrCoupled1 , Tout, corrHistory1,'lineWidth', 2);
+legend('Experiment','Coupled - Simultaneously', ['Coupled - Separately, neuron ' num2str(neuron2)], 'History');
 
-plot(Tout, corrReal1,Tout, corrHistory1, Tout, corrCoupled1,'lineWidth', 2);
-legend('Real', 'history', 'Coupled');
 xlabel('time (ms)');
 ylabel('Cross correlation');
-title(['Cross correlation - Neuron ' num2str(neuron2) ' simulated']);
-ylim([0 inf]);
+title(['Cross correlation - Second side']);
+ylim([0 0.3]);
 
-%ylim([0 0.3]);
-% figure();
-% 
-% plot(Tout, corrReal3,Tout, corrHistory3, Tout, corrCoupled3,'lineWidth', 2);
-% legend('Real', 'history', 'Coupled');
-% 
-% xlabel('time (ms)');
-% ylabel('Cross correlation');
-% title('Cross correlation');
-% ylim([0 0.2]);
+%ylim([0 inf]);
+
+
+
+
+
