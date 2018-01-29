@@ -100,6 +100,7 @@ if fPlot
     subplot(6,1,6);
     plot(time, cumsum(response),'-k', time , cumsum(realSpikes), '-r');
     title('Cumulative spikes');
+    drawnow;
     %ylim([0 0.3]);
 end
 end

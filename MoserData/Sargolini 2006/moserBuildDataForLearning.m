@@ -61,7 +61,7 @@ if length(phaseNan2) > 0
     'error'
 end
 spiketrain(phaseNan) = []; posx(phaseNan) = []; posy(phaseNan) = []; headDirection(phaseNan) = [];
-timeToCut = 30;
+% timeToCut = 30;
 % posx(1:timeToCut) = [];
 % posy(1:timeToCut) = [];
 % headDirection(1:timeToCut) = [];

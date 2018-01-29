@@ -1,6 +1,6 @@
 clear all;
 networkName = '11025-19050503';
-neuronNumber = 3;
+neuronNumber = 1;
 load(['rawDataForLearning/' networkName '/data_for_cell_' num2str(neuronNumber)]);
 spikeExp = find(spiketrain);  
 

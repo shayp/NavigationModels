@@ -12,8 +12,8 @@ config.numofTuningParams = config.numOfHeadDirectionParams + config.numOfTheta +
 % define limits of bins
 config.thetaMask = [0 0 0 1];
 config.boxSize = boxSize;
-config.isiToCount = 100;
-config.windowSize = 10;
+config.isiToCount = 125;
+config.windowSize = 20;
 config.fCoupling = fCoupling;
 % define temporal difference
 config.sampleRate = 1000;
@@ -33,7 +33,7 @@ config.bForHistory = 0.02;
 
 config.lastPeakCoupling = 0.045;
 config.bForCoupling = 1;
-config.numOfRepeats = 200;
+config.numOfRepeats = 400;
 
 % compute a filter, which will be used to smooth the firing rate
 filter = gaussmf(-4:4,[2 0]);

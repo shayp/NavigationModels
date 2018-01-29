@@ -75,7 +75,7 @@ for k = 1:numFolds
     lossFunc  = @(param)ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
     [param] = fminunc(lossFunc, init_param, opts);
 
-    biasParam = param(1);
+    biasParam = param(1)
 
     if config.fCoupling
        spikeHistoryParam = param(2:1 + numOfCouplingParams); 
