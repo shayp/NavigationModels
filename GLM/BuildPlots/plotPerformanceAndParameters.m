@@ -86,7 +86,11 @@ if config.fCoupling
     ylabel('Intensity');
     if numOfCoupledNeurons > 0
         couplingLen = length(modelParams.couplingFilters(:,1));
-        timeSeriesCoupling = linspace(1 * config.dt, couplingLen * config.dt, couplingLen);
+        if config.acausalInteraction
+            timeSeriesCoupling = linspace(-config.timeBeforeSpike * config.dt, (couplingLen - config.timeBeforeSpike) * config.dt, couplingLen);
+        else
+            timeSeriesCoupling = linspace(1 * config.dt, couplingLen * config.dt, couplingLen);
+        end
         dashline = ones(couplingLen,1);
         subplot(2 ,1,2)
         legendLabels = strtrim(cellstr(num2str(coupledNeurons'))');
@@ -109,6 +113,7 @@ end
 
 %% compute and plot the model performances
 figure();
+
 subplot(2,1,1);
 timeBins = linspace(config.psthdt, length(expFiringRate) * config.psthdt,length(expFiringRate));
 plot(timeBins, expFiringRate / config.psthdt, timeBins, simFiringRate / config.psthdt);
@@ -117,6 +122,9 @@ ylabel('Spikes/s');
 title('Firing rate');
 legend(['Experiment'],...
     ['Model ' ' , Explained variance: ' num2str(modelMetrics.varExplain * 100,2) '%, R: ' num2str(modelMetrics.correlation,2)]);
+modelParams.expFiringRate  = expFiringRate;
+modelParams.simFiringRate = simFiringRate;
+modelParams.timeBins = timeBins;
 subplot(2,1,2);
 plot(config.dt:config.dt:length(expISI)* config.dt, expISI, ISI.simISITimes, ISI.simISIPr);
 xlabel('time (seconds)')

@@ -40,19 +40,19 @@ spikeCoupled2 = find(spiketrain);
 [corrHistory2] = MyCrossCorrMS(spikeExp2, spikeHistory1, T);
 [corrCoupled2] = MyCrossCorrMS(spikeExp2,spikeCoupled1, T);
 
-load(['rawDataForLearning/' networkName '/fully_simulated_'  num2str(neuron1)]);
-fullySimulated1 = find(spiketrain);
+% load(['rawDataForLearning/' networkName '/fully_simulated_'  num2str(neuron1)]);
+% fullySimulated1 = find(spiketrain);
 
-load(['rawDataForLearning/' networkName '/fully_simulated_'  num2str(neuron2)]);
-fullySimulated2 = find(spiketrain);
-
-[corrFully1] = MyCrossCorrMS(fullySimulated1,fullySimulated2, T);
-[corrFully2] = MyCrossCorrMS(fullySimulated2,fullySimulated1, T);
+% load(['rawDataForLearning/' networkName '/fully_simulated_'  num2str(neuron2)]);
+% fullySimulated2 = find(spiketrain);
+% 
+% [corrFully1] = MyCrossCorrMS(fullySimulated1,fullySimulated2, T);
+% [corrFully2] = MyCrossCorrMS(fullySimulated2,fullySimulated1, T);
 
 figure();
 
-plot(Tout, corrReal2,Tout,corrFully2, Tout, corrCoupled2 , Tout, corrHistory2,'lineWidth', 2);
-legend('Experiment','Coupled - Simultaneously', ['Coupled - Separately, neuron ' num2str(neuron1)], 'History');
+plot(Tout, corrReal2, Tout, corrCoupled2 , Tout, corrHistory2,'lineWidth', 2);
+legend('Experiment',['Coupled - Separately, neuron ' num2str(neuron1)], 'History');
 
 xlabel('time (ms)');
 ylabel('Cross correlation');
@@ -62,8 +62,8 @@ ylim([0 0.3]);
 
 figure();
 
-plot(Tout, corrReal1,Tout,corrFully1, Tout, corrCoupled1 , Tout, corrHistory1,'lineWidth', 2);
-legend('Experiment','Coupled - Simultaneously', ['Coupled - Separately, neuron ' num2str(neuron2)], 'History');
+plot(Tout, corrReal1, Tout, corrCoupled1 , Tout, corrHistory1,'lineWidth', 2);
+legend('Experiment', ['Coupled - Separately, neuron ' num2str(neuron2)], 'History');
 
 xlabel('time (ms)');
 ylabel('Cross correlation');

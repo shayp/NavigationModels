@@ -19,7 +19,11 @@ if fCoupling
     spikeHistoryFilterLength = length(learnedParams.spikeHistory);
     for j = 1:numOfCoupledNeurons
         coupledConv = conv2(couplingData.data(j).spiketrain, learnedParams.couplingFilters(:,j),'full');
-        coupledConv = [0; coupledConv(1:end - length(learnedParams.couplingFilters(:,j)))];
+        if config.acausalInteraction
+        coupledConv = [coupledConv(config.timeBeforeSpike:end - length(learnedParams.couplingFilters(:,j)) + config.timeBeforeSpike)];
+        else 
+            coupledConv = [0; coupledConv(1:end - length(learnedParams.couplingFilters(:,j)))];
+        end
         baseValue = baseValue + coupledConv;
     end
 end

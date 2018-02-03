@@ -22,16 +22,18 @@ config.psthdt = 1/1000 * config.windowSize;
 config.numFolds = 10;
 config.numModels = 15;
 config.maxSpeed = 50;
+config.timeBeforeSpike = 0;
+config.acausalInteraction = 0;
 % History and coupling config
 config.numOfHistoryParams = 25;
 %config.numOfCouplingParams = 20;
-config.numOfCouplingParams = 7;
+config.numOfCouplingParams = 10;
 
 config.lastPeakHistory = 0.17;
 config.bForHistory = 0.02;
 %config.lastPeakCoupling = 0.025;
 
-config.lastPeakCoupling = 0.045;
+config.lastPeakCoupling = 0.075;
 config.bForCoupling = 1;
 config.numOfRepeats = 400;
 

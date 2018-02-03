@@ -116,22 +116,22 @@ else
     learnedParams.spikeHistory = learningData.historyBaseVectors * modelParams(2:1 + config.numOfHistoryParams)';
     couplingParamsLength = config.numOfCouplingParams * numOfCoupledNeurons;
     kFoldcouplingParams = reshape(kFoldFilters(:,2 + config.numOfHistoryParams:couplingParamsLength + config.numOfHistoryParams + 1), config.numFolds, config.numOfCouplingParams, numOfCoupledNeurons);
-    figure();
-    time = linspace(config.dt, config.dt * size(learningData.couplingBaseVectors,1), size(learningData.couplingBaseVectors, 1));
-    for i = 1:numOfCoupledNeurons
-    subplot(numOfCoupledNeurons, 1, i);
-    constVal = ones(size(learningData.couplingBaseVectors,1),1);
-    plot(time, exp(learningData.couplingBaseVectors * kFoldcouplingParams(:,:,i)'));
-    hold on
-    plot(time, constVal,'--r','linewidth', 2);
-    hold off;
-    hold on
-    plot(time, exp(mean(learningData.couplingBaseVectors * kFoldcouplingParams(:,:,i)',2)),'linewidth', 2);
-    hold off;
-    title('coupling filters - k folds');
-    ylabel('Intensity');
-    xlabel('Times (sec)');
-    end
+%     figure();
+%     time = linspace(-config.timeBeforeSpike * config.dt, config.dt * (size(learningData.couplingBaseVectors,1) - config.timeBeforeSpike), size(learningData.couplingBaseVectors, 1));
+%     for i = 1:numOfCoupledNeurons
+%     subplot(numOfCoupledNeurons, 1, i);
+%     constVal = ones(size(learningData.couplingBaseVectors,1),1);
+%     plot(time, exp(learningData.couplingBaseVectors * kFoldcouplingParams(:,:,i)'));
+%     hold on
+%     plot(time, constVal,'--r','linewidth', 2);
+%     hold off;
+%     hold on
+%     plot(time, exp(mean(learningData.couplingBaseVectors * kFoldcouplingParams(:,:,i)',2)),'linewidth', 2);
+%     hold off;
+%     title('coupling filters - k folds');
+%     ylabel('Intensity');
+%     xlabel('Times (sec)');
+%     end
 
     drawnow;
     savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_Coupled_ConfidenceInterval']);

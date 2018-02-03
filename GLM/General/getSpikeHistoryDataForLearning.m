@@ -3,7 +3,7 @@ function designMatrix = getSpikeHistoryDataForLearning(config, learningData, num
 designMatrix = buildSpikeHistoryDesignMatrix(config.numOfHistoryParams, learningData.historyBaseVectors, learningData.spiketrain);
 
 for i = 1:numOfCoupledNeurons
-    currCouplingMatrix = buildSpikeHistoryDesignMatrix(config.numOfCouplingParams, learningData.couplingBaseVectors,couplingData.data(i).spiketrain);
+    currCouplingMatrix = buildCouplingDesignMatrix(config.numOfCouplingParams, learningData.couplingBaseVectors,couplingData.data(i).spiketrain, config.timeBeforeSpike, config.acausalInteraction);
     designMatrix = [designMatrix currCouplingMatrix];
 end
 

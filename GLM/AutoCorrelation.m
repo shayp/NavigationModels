@@ -12,20 +12,20 @@ spikeHistory = find(spiketrain);
 
 load(['rawDataForLearning/' networkName '/coupled_simulated_data_cell_'  num2str(neuronNumber)]);
 spikeCoupled = find(spiketrain);
-T = -505.5:10:505.5;
-Tout = -500:10:500;
+T = -205.5:10:205.5;
+Tout = -200:10:200;
 [corrReal] = MyCrossCorrMS(spikeExp,spikeExp, T);
 [corrNoHistory] = MyCrossCorrMS(spikeNoHistory,spikeNoHistory,T);
 [corrHistory] = MyCrossCorrMS(spikeHistory,spikeHistory, T);
 [corrCoupled] = MyCrossCorrMS(spikeCoupled,spikeCoupled, T);
 
 figure();
-plot(Tout, corrReal,Tout, corrNoHistory,Tout, corrHistory, Tout, corrCoupled,'lineWidth', 2);
-legend('Real', 'No history', 'history', 'Coupled');
+plot(Tout, corrReal,'-k',Tout, corrNoHistory,'-b',Tout, corrHistory,'-r', 'lineWidth', 3);
+legend('MEC data', 'No history', 'History');
 xlabel('time (ms)');
 ylabel('Auto correlation');
-title('Auto correlation');
-ylim([0 1]);
+%title('Auto correlation');
+%ylim([0 1]);
 
 [corrRealExp] = MyCrossCorrMS(spikeExp,spikeExp, T);
 [corrNoHistoryExp] = MyCrossCorrMS(spikeNoHistory,spikeExp,T);

@@ -10,9 +10,9 @@ function [cor] = MyCrossCorrMS(A,B, T)
 cor=zeros(1,length(T)-1);
 
 for i=1:length(A)
-    
         C=B-A(i);        
         [N,edges] = histcounts(C,T);
         cor=cor+N;
 end   
 cor=cor/length(B);
+cor(cor > 1) = 1;

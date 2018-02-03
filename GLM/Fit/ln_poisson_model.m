@@ -89,8 +89,8 @@ dlCoupled = [];
 if config.fCoupling && config.numOfHistoryParams
 %     J_couled = 5e-1 * sum(abs(spikeHistoryParam(config.numOfHistoryParams:end)));
 %     dlCoupled = 5e-1 * sign(spikeHistoryParam(config.numOfHistoryParams:end));
-    J_History = 5e-1 * sum(abs(spikeHistoryParam));
-    dlHistory = dlHistory + 5e-1 * sign(spikeHistoryParam);
+     J_History = 5e-1 * sum(abs(spikeHistoryParam));
+     dlHistory = dlHistory + 5e-1 * sign(spikeHistoryParam);
     %dlHistory(config.numOfHistoryParams:end) = dlHistory(config.numOfHistoryParams:end) + dlCoupled;
 end
 f = logLL + J_pos + J_hd + J_speed + J_theta + J_History;
