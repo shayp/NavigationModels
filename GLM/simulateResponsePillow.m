@@ -1,8 +1,7 @@
-function [response, lambdas] = simulateResponsePillow(stimulus, tuningCurves, learnedParams, fCoupling,  numOfCoupledNeurons, couplingData, dt, config, fTheta, thetaGrid,fPlot,realSpikes)
+function [response, finalLambdas] = simulateResponsePillow(stimulus, tuningCurves, learnedParams, fCoupling,  numOfCoupledNeurons, couplingData, dt, config, fTheta, thetaGrid,fPlot,realSpikes)
 
 simulationLength = size(stimulus, 1);
 response = zeros(simulationLength, 1);
-lambdas = zeros(simulationLength, 1);
 baseValue = zeros(simulationLength, 1);
 historyValue = zeros(simulationLength, 1);
 lambdas =  zeros(simulationLength, 1);
@@ -107,6 +106,7 @@ if fPlot
     drawnow;
     %ylim([0 0.3]);
 end
+finalLambdas = exp(baseValue + historyValue) * dt;
 end
 
 

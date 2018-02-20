@@ -4,42 +4,8 @@ function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiring
 
 numOfFilters = 4;
 
-% Set learned bias
-learnedParams.biasParam = modelParams(1);
-numFolds = size(kFoldParams,1);
-if config.fCoupling
-    
-    couplingParamsLength = config.numOfCouplingParams * numOfCoupledNeurons;
-   
-   
-    % Set spike history filter
-    learnedParams.spikeHistory = mean(historyBaseVectors * kFoldParams(:, 2:1 + config.numOfHistoryParams)', 2);
-   
-    if numOfCoupledNeurons > 0
-        % Set coupling fiilters
-        kFoldcouplingParams = reshape(kFoldParams(:,2 + config.numOfHistoryParams:couplingParamsLength + config.numOfHistoryParams + 1), numFolds, config.numOfCouplingParams, numOfCoupledNeurons);
-        couplingParams = reshape(modelParams(2 + config.numOfHistoryParams:couplingParamsLength + config.numOfHistoryParams + 1), config.numOfCouplingParams, numOfCoupledNeurons);
+[learnedParams, config.fTheta] = getLearnedParameters(modelParams, modelType, config, kFoldParams, historyBaseVectors, numOfCoupledNeurons, couplingBaseVectors);
 
-        for i = 1:numOfCoupledNeurons
-            learnedParams.couplingFilters(:,i) = mean(couplingBaseVectors * kFoldcouplingParams(:,:, i)', 2);
-        end
-    end
-    
-    % Set tuning params
-    tuningParams = modelParams(2 + config.numOfHistoryParams + couplingParamsLength:end);
-else
-    % Set tuning params
-    tuningParams = modelParams(2:end);
-end
-config.fTheta = 0;
-learnedParams.allTuningParams = tuningParams;
-if sum(config.thetaMask & modelType) > 0
-    config.fTheta = 1;
-    learnedParams.thetaParam = tuningParams(end - config.numOfTheta + 1:end);
-    tuningParams = tuningParams(1:end - config.numOfTheta);
-end
-learnedParams.tuningParams = tuningParams;
-learnedParams.modelType = modelType;
 simulationLength = length(spiketrain);
 modelFiringRate = zeros(simulationLength, config.numOfRepeats);
 simISI = [];
@@ -50,21 +16,17 @@ selectedInd = 0;
 
 for i = 1:config.numOfRepeats
     % Get simulated firing rate
-    [modelFiringRate(:,i), modelLambdas] = simulateResponsePillow(stimulus, tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config, config.fTheta, thetaGrid,0, spiketrain);   
+    [modelFiringRate(:,i), modelLambdas] = simulateResponsePillow(stimulus, learnedParams.tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config, config.fTheta, thetaGrid,0, spiketrain);   
     log_llh_model = nansum(modelLambdas - spiketrain.*log(modelLambdas) + log(factorial(spiketrain))) / sum(spiketrain);
     log_llh = log(2) * (-log_llh_model + log_llh_mean);
-    if log_llh > -1
         selectedInd = selectedInd + 1;
         log_likekihood_final = log_likekihood_final + log_llh;
         simISI = [simISI diff(find(modelFiringRate(:,i)))'];
-        %modelFiringRate(:,i) = modelLambdas;
-    else
-        modelFiringRate(:,i) = modelFiringRate(:,i) -  modelFiringRate(:,i);
-    end
+        modelFiringRate(:,i) = modelLambdas;
+
 end
 log_likekihood_final = log_likekihood_final / selectedInd;
 log_likekihood_final
-selectedInd
 summedFiringRate = sum(modelFiringRate,2) / selectedInd;
 
 % Get psth and metrics 

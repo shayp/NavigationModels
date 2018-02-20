@@ -19,21 +19,21 @@ config.fCoupling = fCoupling;
 config.sampleRate = 1000;
 config.dt = 1/1000;
 config.psthdt = 1/1000 * config.windowSize;
-config.numFolds = 10;
+config.numFolds = 6;
 config.numModels = 15;
 config.maxSpeed = 50;
 config.timeBeforeSpike = 0;
 config.acausalInteraction = 0;
 % History and coupling config
-config.numOfHistoryParams = 25;
+config.numOfHistoryParams = 12;
 %config.numOfCouplingParams = 20;
-config.numOfCouplingParams = 10;
+config.numOfCouplingParams = 5;
 
-config.lastPeakHistory = 0.17;
+config.lastPeakHistory = 0.15;
 config.bForHistory = 0.02;
 %config.lastPeakCoupling = 0.025;
 
-config.lastPeakCoupling = 0.075;
+config.lastPeakCoupling = 0.032;
 config.bForCoupling = 1;
 config.numOfRepeats = 400;
 

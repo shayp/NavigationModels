@@ -62,7 +62,7 @@ if top2 == 6 % PH -> PHV, PHB
 end
 %  
  top4 = 1;
- LL_values(isnan(LL_values)) = -10;
+ LL_values(isnan(LL_values)) = -1;
 
 LL1 = LL_values(:,top1);
 LL2 = LL_values(:,top2);
@@ -71,12 +71,14 @@ LL4 = LL_values(:,top4);
 
 
  [p_LL_12,~] = signrank(LL2,LL1,'tail','right');
+ p_LL_12
  [p_LL_23,~] = signrank(LL3,LL2,'tail','right');
+ p_LL_23
  [p_LL_34,~] = signrank(LL4,LL3,'tail','right');
-
-if p_LL_12 < 0.05 % double model is sig. better
-    if p_LL_23 < 0.05  % triple model is sig. better
-        if p_LL_34 < 0.05
+p_LL_34
+if p_LL_12 < 0.3 % double model is sig. better
+    if p_LL_23 < 0.3  % triple model is sig. better
+        if p_LL_34 < 0.3
             selectedModel = top4;
         else
             selectedModel = top3;
@@ -87,6 +89,6 @@ if p_LL_12 < 0.05 % double model is sig. better
 else
     selectedModel = top1;
 end
-[maxGlobal, selectedModel] = max(nanmean(LL_values,1));
+%[maxGlobal, selectedModel] = max(nanmean(LL_values,1));
 
 end

@@ -7,7 +7,7 @@ for i = isiToCount + 1:numel(thetaPhase)
     
     % figure out the hd index
     [~, idx] = min(abs(thetaPhase(i)-dirVec));
-    if (sum(spiketrain(i - isiToCount:i - 1)) < 1 && fTrain) || fTrain == 0
+    if (sum(spiketrain(i - isiToCount:i - 1)) == 0 && fTrain) || fTrain == 0
         theta_grid(i,idx) = 1;
     end
   

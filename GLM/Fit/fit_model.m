@@ -52,7 +52,6 @@ for k = 1:numFolds
         train_designMat = designMatrix(train_ind,:);
     end
     opts = optimset('Gradobj','on','Hessian','on','Display','off');
-    %opts = optimset('Gradobj','on','Hessian','on','Display','on', 'MaxIter', 200, 'TolFun', 1e-3);
     trainData{1} = train_features;
     testData{1} = test_features;
 
@@ -65,17 +64,14 @@ for k = 1:numFolds
 
     if k == 1
         init_param =  1e-3*randn(numOfLearnedParams, 1);
-        %init_param(1) = -10;
     else
         init_param = param;
-        %init_param =  1e-3*randn(numOfLearnedParams, 1);
-        %init_param = zeros(numOfLearnedParams, 1);
-        %init_param(1) = -10;
+
     end
     lossFunc  = @(param)ln_poisson_model(param,trainData,modelType, config, numOfCouplingParams);
     [param] = fminunc(lossFunc, init_param, opts);
 
-    biasParam = param(1)
+    biasParam = param(1);
 
     if config.fCoupling
        spikeHistoryParam = param(2:1 + numOfCouplingParams); 
@@ -85,14 +81,14 @@ for k = 1:numFolds
     end
     
     %%%%%%%%%%%%% TEST DATA %%%%%%%%%%%%%%%%%%%%%%%
+    
     % compute the firing rate
     linearFilter_hat_test = test_features * tuningParams + biasParam;
     if config.fCoupling
         linearFilter_hat_test = linearFilter_hat_test + test_designMat * spikeHistoryParam;
     end
     fr_hat_test = exp(linearFilter_hat_test) * config.dt;
-    
-    test_ll = -1*  sum(fr_hat_test - fr_test.*linearFilter_hat_test);
+        
     % compare between test fr and model fr
     sse = sum((fr_hat_test-fr_test).^2);
     sst = sum((fr_hat_test-mean(fr_test)).^2);
@@ -108,7 +104,7 @@ for k = 1:numFolds
     log_llh_test_model = nansum(fr_hat_test - fr_test.*log(fr_hat_test) + log(factorial(fr_test))) / sum(fr_test);
     mean_fr_test = nanmean(fr_test);
     log_llh_test_mean = nansum(mean_fr_test - fr_test .* log(mean_fr_test) + log(factorial(fr_test))) / sum(fr_test);
-    log_llh_test = log(2) * (-log_llh_test_model + log_llh_test_mean)
+    log_llh_test = log(2) * (-log_llh_test_model + log_llh_test_mean);
     if log_llh_test == inf || log_llh_test == -inf
         log_llh_test = nan;
     end
@@ -135,21 +131,18 @@ for k = 1:numFolds
     % compute correlation
     correlation_train = corr(fr_train,fr_hat_train,'type','Pearson');
     
-%     log_llh_train_model = nansum(linearFilter_hat_train - train_spikes.*log(linearFilter_hat_train) + log(factorial(train_spikes))) / sum(train_spikes);
-%     mean_fr_train = nanmean(train_spikes);
-%     log_llh_train_mean = nansum(mean_fr_train - train_spikes .* log(mean_fr_train) + log(factorial(train_spikes))) / sum(train_spikes);
-%     log_llh_train = log(2) * (-log_llh_train_model + log_llh_train_mean);
-% 
-%     if log_llh_train == inf || log_llh_train == -inf
-%         log_llh_train = 0;
-%     end
+    log_llh_train_model = nansum(linearFilter_hat_train - train_spikes.*log(linearFilter_hat_train) + log(factorial(train_spikes))) / sum(train_spikes);
+    mean_fr_train = nanmean(train_spikes);
+    log_llh_train_mean = nansum(mean_fr_train - train_spikes .* log(mean_fr_train) + log(factorial(train_spikes))) / sum(train_spikes);
+    log_llh_train = log(2) * (-log_llh_train_model + log_llh_train_mean);
+
+    if log_llh_train == inf || log_llh_train == -inf
+        log_llh_train = 0;
+    end
     
-    train_ll = -1 * sum(fr_hat_train - fr_train.*linearFilter_hat_train);
-
-
     % compute MSE
     mse_train = nanmean((fr_hat_train - fr_train).^2);
-    trainFit(k,:) = [varExplain_train correlation_train train_ll mse_train sum(train_spikes) numel(train_ind)];
+    trainFit(k,:) = [varExplain_train correlation_train log_llh_train mse_train sum(train_spikes) numel(train_ind)];
     if sum(train_spikes) ~= 0
         % save the parameters
         paramMat(k,:) = param;

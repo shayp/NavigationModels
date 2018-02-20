@@ -7,7 +7,7 @@ biasParam = param(1);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
-b_pos = 4e0; b_hd = 5e-3;  b_speed = 5e1; b_Theta =5e-2;
+b_pos = 1e-2; b_hd = 5e-3;  b_speed = 5e-2; b_Theta =5e-1;
 %b_pos = 10e0; b_hd = 5e-3;  b_speed = 5e-3; b_Theta =5e-4;
 
 if config.fCoupling
@@ -68,7 +68,7 @@ J_theta = 0; J_theta_g = []; J_theta_h = [];
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
-    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,b_pos);
+    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,b_pos, 2e-3);
 end
 
 if ~isempty(param_hd)
@@ -87,11 +87,10 @@ end
 J_History = 0;
 dlCoupled = [];
 if config.fCoupling && config.numOfHistoryParams
-%     J_couled = 5e-1 * sum(abs(spikeHistoryParam(config.numOfHistoryParams:end)));
-%     dlCoupled = 5e-1 * sign(spikeHistoryParam(config.numOfHistoryParams:end));
-     J_History = 5e-1 * sum(abs(spikeHistoryParam));
-     dlHistory = dlHistory + 5e-1 * sign(spikeHistoryParam);
-    %dlHistory(config.numOfHistoryParams:end) = dlHistory(config.numOfHistoryParams:end) + dlCoupled;
+     J_History = 1e0 * sum(abs(spikeHistoryParam(3:end)));
+     dlHistory(3:end) = dlHistory(3:end) + 1e0 * sign(spikeHistoryParam(3:end));
+%      J_History = 1e0 * sum(abs(spikeHistoryParam));
+%      dlHistory = dlHistory + 1e0 * sign(spikeHistoryParam);
 end
 f = logLL + J_pos + J_hd + J_speed + J_theta + J_History;
 dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_speed_g; J_theta_g];
@@ -101,7 +100,7 @@ hessian = [[HBias HHistoryBias' HTuningBias']; [HHistoryBias HHistory HTuningHis
 
 
 %% smoothing functions called in the above script
-function [J,J_g,J_h] = rough_penalty_2d(param,beta)
+function [J,J_g,J_h] = rough_penalty_2d(param,beta, gamma)
 
     numParam = numel(param);
     D1 = spdiags(ones(sqrt(numParam),1)*[-1 1],0:1,sqrt(numParam)-1,sqrt(numParam));
@@ -109,8 +108,9 @@ function [J,J_g,J_h] = rough_penalty_2d(param,beta)
     M1 = kron(eye(sqrt(numParam)),DD1); M2 = kron(DD1,eye(sqrt(numParam)));
     M = (M1 + M2);
  
-    J = beta*0.5*param'*M*param;
-    J_g = beta*M*param;
+    
+    J = beta*0.5*param'*M*param + gamma * sum(abs(param));
+    J_g = beta*M*param + gamma * sign(param);
     J_h = beta*M;
 
 function [J,J_g,J_h] = rough_penalty_1d_circ(param,beta)

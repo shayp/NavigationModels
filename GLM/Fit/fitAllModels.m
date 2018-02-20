@@ -2,7 +2,7 @@
 % The model: r = exp(W*theta), where r is the predicted # of spikes, W is a
 % matrix of one-hot vectors describing variable (P, H, S, or T) values, and
 % theta is the learned vector of parameters.
-function [numModels, testFit, trainFit, param, Models,modelType, kfoldsParam] = fitAllModels(learnedParameters, config, features, fCoupling)
+function [numModels, testFit, trainFit, param, Models,modelType, kfoldsParam, selected_models] = fitAllModels(learnedParameters, config, features, fCoupling)
 
 %% Fit all 15 LN models
 posgrid = features.posgrid;
@@ -61,8 +61,9 @@ Models{14} = [speedgrid];
 Models{15} = [thetaGrid];
 % compute the number of folds we would like to do
 numFolds = config.numFolds;
-selected_models = [8 12];
-%selected_models = 1:numModels;
+%selected_models = [2 6 7 9 12 13 14];
+%selected_models = [12];
+selected_models = 1:(numModels - 1);
 for n = selected_models
     fprintf('\t- Fitting model %d of %d\n', n, numModels);
     [testFit{n},trainFit{n},param{n}, kfoldsParam{n}] = fit_model(Models{n},  learnedParameters.spiketrain, ...

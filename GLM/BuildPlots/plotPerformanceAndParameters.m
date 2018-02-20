@@ -11,14 +11,22 @@ numOfRows = ceil(modelParams.numOfFilters / 2);
 hd_vector =  linspace(0, 2 * pi, config.numOfHeadDirectionParams);
 speedBins = linspace(0, config.maxSpeed, config.numOfSpeedBins);
 
+
+
 posXAxes = linspace(0, config.boxSize(1), config.numOfPositionAxisParams);
 posYAxes = linspace(config.boxSize(2),0, config.numOfPositionAxisParams);
 thetaBins = linspace(0, 2 * pi, config.numOfTheta);
 figure();
 scale_factor = exp(modelParams.biasParam);
+
+scale_factor_pos = mean(exp(modelParams.hd_param))*mean(exp(modelParams.speed_param))*mean(exp(modelParams.theta_param));
+scale_factor_hd = mean(exp(modelParams.pos_param))*mean(exp(modelParams.speed_param))*mean(exp(modelParams.theta_param));
+scale_factor_spd = mean(exp(modelParams.pos_param))*mean(exp(modelParams.hd_param))*mean(exp(modelParams.theta_param));
+scale_factor_theta =  mean(exp(modelParams.pos_param))*mean(exp(modelParams.hd_param))*mean(exp(modelParams.speed_param));
+
 if numel(modelParams.pos_param) == config.numOfPositionParams
     currentIndex = currentIndex + 1;
-    pos_response = scale_factor*exp(modelParams.pos_param);
+    pos_response = scale_factor*scale_factor_pos*exp(modelParams.pos_param);
     subplot(numOfRows,2,currentIndex)
     imagesc(posXAxes, fliplr(posYAxes),reshape(pos_response,config.numOfPositionAxisParams,config.numOfPositionAxisParams)); colorbar;
     axis square
@@ -30,7 +38,7 @@ end
 
 if  numel(modelParams.hd_param) == config.numOfHeadDirectionParams
     currentIndex = currentIndex + 1;
-    hd_response = scale_factor * exp(modelParams.hd_param);
+    hd_response = scale_factor*scale_factor_hd* exp(modelParams.hd_param);
     subplot(numOfRows,2,currentIndex)
     polarplot([hd_vector hd_vector(1)],[hd_response hd_response(1)],'k','linewidth',2);
     title('Learned head direction curve');
@@ -42,7 +50,7 @@ if numel(modelParams.speed_param) == config.numOfSpeedBins
     % compute the scale factors
 
     % compute the model-derived response profiles
-    speed_response = scale_factor*exp(modelParams.speed_param);
+    speed_response = scale_factor*scale_factor_spd*exp(modelParams.speed_param);
     subplot(numOfRows,2,currentIndex)
     plot(speedBins, speed_response,'k','linewidth',3);
     axis square
@@ -56,7 +64,7 @@ if numel(modelParams.theta_param) == config.numOfTheta
     currentIndex = currentIndex + 1;
 
     % compute the model-derived response profiles
-    theta_response = scale_factor*exp(modelParams.theta_param);
+    theta_response = scale_factor*scale_factor_theta*exp(modelParams.theta_param);
     subplot(numOfRows,2,currentIndex)
     polarplot([thetaBins thetaBins(1)],[theta_response theta_response(1)],'k','linewidth',2)
     title('Learned theta curve');
