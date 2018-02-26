@@ -7,7 +7,7 @@ biasParam = param(1);
 
 % roughness regularizer weight - note: these are tuned using the sum of f,
 % and thus have decreasing influence with increasing amounts of data
-b_pos = 1e-2; b_hd = 5e-3;  b_speed = 5e-2; b_Theta =5e-1;
+b_pos = 5e-2; b_hd = 5e-3;  b_speed = 5e-1; b_Theta =5e-2;
 %b_pos = 10e0; b_hd = 5e-3;  b_speed = 5e-3; b_Theta =5e-4;
 
 if config.fCoupling
@@ -68,29 +68,29 @@ J_theta = 0; J_theta_g = []; J_theta_h = [];
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
-    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,b_pos, 2e-3);
+    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,b_pos, 2e-2);
 end
 
 if ~isempty(param_hd)
-    [J_hd,J_hd_g,J_hd_h] = rough_penalty_1d_circ(param_hd,b_hd);
+    [J_hd,J_hd_g,J_hd_h] = rough_penalty_1d_circ(param_hd,b_hd, 0);
 end
 
 if ~isempty(param_speed)
-    [J_speed,J_speed_g,J_speed_h] = rough_penalty_1d(param_speed,b_speed);
+    [J_speed,J_speed_g,J_speed_h] = rough_penalty_1d(param_speed,b_speed, 0);
 end
 
 if ~isempty(param_theta)
-    [J_theta,J_theta_g,J_theta_h] = rough_penalty_1d_circ(param_theta,b_Theta);
+    [J_theta,J_theta_g,J_theta_h] = rough_penalty_1d_circ(param_theta,b_Theta, 0);
 end
 
 %% compute f, the gradient, and the hessian 
 J_History = 0;
 dlCoupled = [];
 if config.fCoupling && config.numOfHistoryParams
-     J_History = 1e0 * sum(abs(spikeHistoryParam(3:end)));
-     dlHistory(3:end) = dlHistory(3:end) + 1e0 * sign(spikeHistoryParam(3:end));
-%      J_History = 1e0 * sum(abs(spikeHistoryParam));
-%      dlHistory = dlHistory + 1e0 * sign(spikeHistoryParam);
+%      J_History = 1e0 * sum(abs(spikeHistoryParam(3:end)));
+%      dlHistory(3:end) = dlHistory(3:end) + 1e0 * sign(spikeHistoryParam(3:end));
+      J_History = 1e0 * sum(abs(spikeHistoryParam));
+      dlHistory = dlHistory + 1e0 * sign(spikeHistoryParam);
 end
 f = logLL + J_pos + J_hd + J_speed + J_theta + J_History;
 dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_speed_g; J_theta_g];
@@ -113,7 +113,7 @@ function [J,J_g,J_h] = rough_penalty_2d(param,beta, gamma)
     J_g = beta*M*param + gamma * sign(param);
     J_h = beta*M;
 
-function [J,J_g,J_h] = rough_penalty_1d_circ(param,beta)
+function [J,J_g,J_h] = rough_penalty_1d_circ(param,beta, gamma)
     
     numParam = numel(param);
     D1 = spdiags(ones(numParam,1)*[-1 1],0:1,numParam-1,numParam);
@@ -123,17 +123,17 @@ function [J,J_g,J_h] = rough_penalty_1d_circ(param,beta)
     DD1(1,:) = circshift(DD1(2,:),[0 -1]);
     DD1(end,:) = circshift(DD1(end-1,:),[0 1]);
     
-    J = beta*0.5*param'*DD1*param;
-    J_g = beta*DD1*param;
+    J = beta*0.5*param'*DD1*param  + gamma * sum(abs(param));
+    J_g = beta*DD1*param + gamma * sign(param);
     J_h = beta*DD1;
 
-function [J,J_g,J_h] = rough_penalty_1d(param,beta)
+function [J,J_g,J_h] = rough_penalty_1d(param,beta, gamma)
 
     numParam = numel(param);
     D1 = spdiags(ones(numParam,1)*[-1 1],0:1,numParam-1,numParam);
     DD1 = D1'*D1;
-    J = beta*0.5*param'*DD1*param;
-    J_g = beta*DD1*param;
+    J = beta*0.5*param'*DD1*param + gamma * sum(abs(param));
+    J_g = beta*DD1*param+ gamma * sign(param);
     J_h = beta*DD1;
 
 

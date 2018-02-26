@@ -1,7 +1,15 @@
-function [config, learningData, features, numModels, testFit, trainFit, param] = runLearning(sessionName, data_path, neuronNumber, configFilePath, fCoupling, coupledNeurons)
+function [allStimulus,tuningParams, couplingFilters, historyFilter, bias, dt] = runLearning(sessionName, data_path, neuronNumber, configFilePath, fCoupling, coupledNeurons)
+allStimulus = [];
+tuningParams = [];
+couplingFilters = [];
+historyFilter = [];
+bias = nan;
+
 addpath('General');
 addpath('featureMaps');
 addpath('Fit');
+addpath('simulation');
+
 addpath('BuildPlots');
 if fCoupling == 0
     numOfCoupledNeurons = 0;
@@ -35,13 +43,13 @@ end
 features.designMatrix = designMatrix;
 
 smooth_fr = conv(learningData.spiketrain, config.filter, 'same');
-
+mean_fr = sum(learningData.spiketrain) / length(learningData.spiketrain) / config.dt;
 % Get experiment tuning curves
 [pos_curve, hd_curve, speed_curve, theta_curve] = ...
     computeTuningCurves(learningData, features, config, smooth_fr);
 
 % Plot experiment tuning curve
-plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName);
+plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName, mean_fr);
 
 
 % Fit model
@@ -49,7 +57,7 @@ plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, t
     fitAllModels(learningData, config, features, fCoupling);
 
 % % Select best models
-% [topSingleCurve, selectedModel] = ...
+% [topSingleCurve, selected Model] = ...
 %     selectBestModel(testFit,config.numFolds, numModels);
 % testFit_mat = cell2mat(testFit);
 numOfRepeats = 10;
@@ -87,6 +95,16 @@ end
 
 [trainFiringRate, ~] = simulateResponsePillow(learningStimulus, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt, config, fTheta, simFeatures.thetaGrid,0,[]);
 [testFiringRate, ~] = simulateResponsePillow(validationStimulusSelected, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, validationCouplingData,config.dt, config, fTheta, validationFeatures.thetaGrid,0,[]);
+dt = config.dt;
+
+if (config.fCoupling == 1 && numOfCoupledNeurons > 0)
+    allStimulus = [learningStimulus; validationStimulusSelected];
+    tuningParams = learnedParams.tuningParams;
+    couplingFilters = learnedParams.couplingFilters;
+    historyFilter = learnedParams.spikeHistory;
+    bias = learnedParams.biasParam;
+end
+
 spiketrain = [testFiringRate; trainFiringRate];
 
 if config.fCoupling == 0

@@ -9,7 +9,7 @@ currentIndex = 0;
 numOfRows = ceil(modelParams.numOfFilters / 2);
 
 hd_vector =  linspace(0, 2 * pi, config.numOfHeadDirectionParams);
-speedBins = linspace(0, config.maxSpeed, config.numOfSpeedBins);
+speedBins = config.speedVec;
 
 
 

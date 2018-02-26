@@ -62,8 +62,8 @@ Models{15} = [thetaGrid];
 % compute the number of folds we would like to do
 numFolds = config.numFolds;
 %selected_models = [2 6 7 9 12 13 14];
-%selected_models = [12];
-selected_models = 1:(numModels - 1);
+selected_models = [12];
+%selected_models = 1:(numModels);
 for n = selected_models
     fprintf('\t- Fitting model %d of %d\n', n, numModels);
     [testFit{n},trainFit{n},param{n}, kfoldsParam{n}] = fit_model(Models{n},  learnedParameters.spiketrain, ...

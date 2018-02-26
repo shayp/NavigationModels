@@ -3,7 +3,7 @@ load(configFilePath);
 
 % Define num of learned parameters for learning
 config.numOfHeadDirectionParams = 30;
-config.numOfSpeedBins = 10;
+config.numOfSpeedBins = 8;
 config.numOfTheta = 20;
 
 config.numOfPositionAxisParams = 25;
@@ -19,15 +19,16 @@ config.fCoupling = fCoupling;
 config.sampleRate = 1000;
 config.dt = 1/1000;
 config.psthdt = 1/1000 * config.windowSize;
-config.numFolds = 6;
+config.numFolds = 2;
 config.numModels = 15;
 config.maxSpeed = 50;
 config.timeBeforeSpike = 0;
 config.acausalInteraction = 0;
 % History and coupling config
-config.numOfHistoryParams = 12;
+config.numOfHistoryParams = 16;
 %config.numOfCouplingParams = 20;
 config.numOfCouplingParams = 5;
+config.speedVec = [0 1 4 8 14 26 38 50];
 
 config.lastPeakHistory = 0.15;
 config.bForHistory = 0.02;
@@ -75,7 +76,6 @@ isi = isi / length(spikeDistance);
 firstPeak = max(learningData.refreactoryPeriod + config.dt, learningData.refreactoryPeriod);
 
 historyPeaks = [firstPeak config.lastPeakHistory];
-couplingPeaks = [0.005 config.lastPeakCoupling];
 
 [~, ~, learningData.historyBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfHistoryParams, config.dt, historyPeaks, config.bForHistory, learningData.refreactoryPeriod);
 %[~, ~, learningData.couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(config.numOfCouplingParams, config.dt, couplingPeaks, config.bForCoupling, config.dt);

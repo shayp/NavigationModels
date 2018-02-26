@@ -1,13 +1,13 @@
-function plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName)
+function plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName, mean_fr)
 % create x-axis vectors
 hd_vector =  linspace(0, 2 * pi, config.numOfHeadDirectionParams);
-speedBins = linspace(0, config.maxSpeed, config.numOfSpeedBins);
+speedBins = config.speedVec;
 figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 spikedInd = find(learningData.spiketrain);
 subplot(3,2,1);
 plot(learningData.posx, learningData.posy,'-k', learningData.posx(spikedInd), learningData.posy(spikedInd), '.r');
 axis square
-title('trajectory');
+title(['trajectory - mean firing rate ' num2str(mean_fr) ' Hz']);
 xlim([0 100]);
 ylim([0 100]);
 
@@ -29,6 +29,8 @@ polarplot([hd_vector hd_vector(1)],[hd_curve; hd_curve(1)],'k','linewidth',1)
 title('Experiment head direction curve')
 
 subplot(3,2,4)
+size(speed_curve)
+size(speedBins)
 plot(speedBins, speed_curve,'k','linewidth',3); 
 axis square
 box off;

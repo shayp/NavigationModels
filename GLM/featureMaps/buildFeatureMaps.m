@@ -8,9 +8,9 @@ function [features] = buildFeatureMaps(config, learningData, fTrain)
 %smoothfr = conv(learningData.spiketrain, config.filter,'same');
 smoothfr = learningData.spiketrain;
 % compute theta matrix
-[features.thetaGrid, features.thetaVec] = theta_map(learningData.thetaPhase, config.numOfTheta, smoothfr, config.isiToCount, fTrain);
+[features.thetaGrid, features.thetaVec] = theta_map(learningData.thetaPhase, config.numOfTheta, smoothfr,fTrain);
 
 % compute speed matrix
-[features.speedgrid, features.speed, features.speedBins] = speed_map(learningData.posx,learningData.posy, config.sampleRate, config.maxSpeed, config.numOfSpeedBins);
+[features.speedgrid, features.speed, features.speedBins] = speed_map(learningData.posx,learningData.posy, config.sampleRate, config.maxSpeed, config.numOfSpeedBins, config.speedVec);
 
 end

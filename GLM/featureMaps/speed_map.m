@@ -1,4 +1,4 @@
-function [speed_grid, speed, speedBins] = speed_map(posx,posy, sampleRate, maxSpeed, numOfSpeedBins)
+function [speed_grid, speed, speedBins] = speed_map(posx,posy, sampleRate, maxSpeed, numOfSpeedBins,speedBins)
 
 
 % add the extra just to make the vectors the same size
@@ -7,9 +7,6 @@ vely = diff([posy(1); posy]);
 
 speed = sqrt(velx.^2+vely.^2) * sampleRate;
 
-
-% Create discrete bins
-speedBins = linspace(0, maxSpeed, numOfSpeedBins);
 
 speed_grid = zeros(numel(posx),numOfSpeedBins);
 

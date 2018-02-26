@@ -2,10 +2,11 @@ function [top1, selectedModel, scores] = selectBestModelBySimulation(modelInd, m
 
 scores = nan(numOfRepeats, config.numModels);
 mean_fr = nanmean(simspiketrain);
-log_llh_mean = nansum(mean_fr - simspiketrain .* log(mean_fr) + log(factorial(simspiketrain))) / sum(simspiketrain);
 validationLength = length(simspiketrain);
 foldLength = ceil(validationLength / numOfRepeats);
 for i = modelInd
+    'current model '
+    i
     modelParam = modelParams{i};
     modelType = modelTypes{i};
     kfoldParam = kFoldParams{i};
@@ -36,8 +37,7 @@ end
 % % find the best single model
 singleModels = 12:15;
 [max1, top1] = max(nanmean(scores(:,singleModels))); top1 = top1 + singleModels(1)-1;
-top1
-max1
+scores
 % 
 % find the best double model that includes the single model
  if top1 == 12 % P -> PH, PV, PB
@@ -76,7 +76,7 @@ end
 %  
  top4 = 1;
  scores(isnan(scores)) = -1;
-scores
+
 LL1 = scores(:,top1);
 LL2 = scores(:,top2);
 LL3 = scores(:,top3);
@@ -84,14 +84,14 @@ LL4 = scores(:,top4);
 
 
  [p_LL_12,~] = signrank(LL2,LL1,'tail','right');
- 
+ p_LL_12
  [p_LL_23,~] = signrank(LL3,LL2,'tail','right');
- 
+ p_LL_23
  [p_LL_34,~] = signrank(LL4,LL3,'tail','right');
-
-if p_LL_12 < 0.05 % double model is sig. better
-    if p_LL_23 < 0.05  % triple model is sig. better
-        if p_LL_34 < 0.05
+p_LL_34
+if p_LL_12 < 0.1 % double model is sig. better
+    if p_LL_23 < 0.1  % triple model is sig. better
+        if p_LL_34 < 0.1
             selectedModel = top4;
         else
             selectedModel = top3;
@@ -103,4 +103,5 @@ else
     selectedModel = top1;
 end
 %[maxGlobal, selectedModel] = max(nanmean(scores,1));
+
 end

@@ -1,7 +1,9 @@
 clear all;
 addpath('General');
-dt = 0.001
-[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(5, 1/1000, [0.001 0.045], 1, 0);
+dt = 0.001;
+[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(15, 1/1000, [0.004 0.15], 0.02, 0.001);
+%[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(5, 1/1000, [0.001 0.03], 1, 0);
+
 figure();
 lenOfVec  = size(couplingBaseVectors,1);
 time = linspace(dt, lenOfVec * dt, lenOfVec);

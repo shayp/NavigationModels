@@ -12,29 +12,22 @@ spikeHistory = find(spiketrain);
 
 load(['rawDataForLearning/' networkName '/coupled_simulated_data_cell_'  num2str(neuronNumber)]);
 spikeCoupled = find(spiketrain);
+
+load(['rawDataForLearning/' networkName '/history_simulated_data_cell_'  num2str(neuronNumber) '_phase']);
+spikeHistTheta = find(spiketrain);
 T = -205.5:10:205.5;
-Tout = -200:10:200;
+Tout = -0.2:0.01:0.2;
 [corrReal] = MyCrossCorrMS(spikeExp,spikeExp, T);
 [corrNoHistory] = MyCrossCorrMS(spikeNoHistory,spikeNoHistory,T);
 [corrHistory] = MyCrossCorrMS(spikeHistory,spikeHistory, T);
 [corrCoupled] = MyCrossCorrMS(spikeCoupled,spikeCoupled, T);
+[corrspikeHistTheta] = MyCrossCorrMS(spikeHistTheta,spikeHistTheta, T);
 
 figure();
-plot(Tout, corrReal,'-k',Tout, corrNoHistory,'-b',Tout, corrHistory,'-r', 'lineWidth', 3);
-legend('MEC data', 'No history', 'History');
-xlabel('time (ms)');
+p=plot(Tout, corrReal,'-k',Tout, corrspikeHistTheta,'-r', Tout,corrHistory,'-b',Tout,corrNoHistory,'-y', 'lineWidth', 3);
+p(4).Color=[0.5 0.5 0.5];
+p(1).Color='Black';
+legend('MEC data', 'History & theta phase', 'History', 'Theta phase');
+xlabel('time (seconds)');
 ylabel('Auto correlation');
-%title('Auto correlation');
-%ylim([0 1]);
 
-[corrRealExp] = MyCrossCorrMS(spikeExp,spikeExp, T);
-[corrNoHistoryExp] = MyCrossCorrMS(spikeNoHistory,spikeExp,T);
-[corrHistoryExp] = MyCrossCorrMS(spikeHistory, spikeExp, T);
-[corrCoupledExp] = MyCrossCorrMS(spikeCoupled,spikeExp, T);
-
-% subplot(2,1,2);
-% plot(Tout, corrNoHistoryExp,Tout, corrHistoryExp, Tout, corrCoupledExp,'lineWidth', 2);
-% legend('No history', 'history', 'Coupled');
-% xlabel('time (ms)');
-% ylabel('Auto correlation');
-% title('Auto correlation');
