@@ -1,16 +1,26 @@
-function [allStimulus,tuningParams, couplingFilters, historyFilter, bias, dt] = runLearning(sessionName, data_path, neuronNumber, configFilePath, fCoupling, coupledNeurons)
-allStimulus = [];
-tuningParams = [];
-couplingFilters = [];
-historyFilter = [];
-bias = nan;
+function [allStimulus,tuningParams, couplingFilters, historyFilter, bias, dt] = runLearning(sessionName, data_path, neuronNumber, configFilePath,...
+    fCoupling, coupledNeurons)
 
+% Define paths to use 
 addpath('General');
 addpath('featureMaps');
 addpath('Fit');
 addpath('simulation');
-
 addpath('BuildPlots');
+addpath('ModelSelection');
+
+% Define empty vars
+allStimulus = [];
+tuningParams = [];
+couplingFilters = [];
+historyFilter = [];
+couplingData = [];
+designMatrix = [];
+
+bias = nan;
+
+
+% Caclulate the number of coupled neurons we have
 if fCoupling == 0
     numOfCoupledNeurons = 0;
 else
@@ -18,95 +28,104 @@ else
     numOfCoupledNeurons = length(coupledNeurons);
 end
 
-couplingData = [];
-
 
 % Get learning data
-[config, learningData, couplingData, validationData, validationCouplingData, expISI, posx, posy, boxSize,sampleRate,headDirection, phase] = loadDataForLearning(data_path, configFilePath, neuronNumber, fCoupling, coupledNeurons);
-
-hd_tuning = compute_1d_tuning_curve(learningData.headDirection, learningData.spiketrain, config.numOfHeadDirectionParams, 0, 2*pi);
+[config, learningData, couplingData, testData, testCouplingData, expISI, posx, posy, boxSize,sampleRate,headDirection, phase] =...
+    loadDataForLearning(data_path, configFilePath, neuronNumber, fCoupling, coupledNeurons);
 
 
 % Build feature maps from the loaded data
-features = buildFeatureMaps(config, learningData, 1);
+trainFeatures = buildFeatureMaps(config, learningData);
+testFeatures = buildFeatureMaps(config, testData);
 
-validationFeatures = buildFeatureMaps(config, validationData, 0);
+% TBD: Dump features into file if needed
+%dumpInputToFile(sessionName, neuronNumber, trainFeatures, testFeatures, learningData, testData,boxSize, sampleRate);
 
-dumpInputToFile(sessionName, neuronNumber, features, validationFeatures, learningData, validationData,boxSize, sampleRate);
-
-% Add spike history or coupling if needed
-designMatrix = [];
+% Get spike history & coupling design matrix if defined
 if fCoupling
-    designMatrix = getSpikeHistoryDataForLearning(config, learningData, numOfCoupledNeurons, couplingData);
+    designMatrix = getSpikeHistoryAndCouplingDataForLearning(config, learningData, numOfCoupledNeurons, couplingData);
 end
 
-features.designMatrix = designMatrix;
+trainFeatures.designMatrix = designMatrix;
 
+% Smooth experiment spike train
 smooth_fr = conv(learningData.spiketrain, config.filter, 'same');
+
+% Get experiment mean firing rate
 mean_fr = sum(learningData.spiketrain) / length(learningData.spiketrain) / config.dt;
+
 % Get experiment tuning curves
 [pos_curve, hd_curve, speed_curve, theta_curve] = ...
-    computeTuningCurves(learningData, features, config, smooth_fr);
+    computeTuningCurves(learningData, trainFeatures, config, smooth_fr);
 
 % Plot experiment tuning curve
-plotExperimentTuningCurves(config, features, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName, mean_fr);
+plotExperimentTuningCurves(config, trainFeatures, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName, mean_fr);
 
 
 % Fit model
 [numModels, testFit, trainFit, param, Models,modelTypes, kFoldParams, selected_models] = ...
-    fitAllModels(learningData, config, features, fCoupling);
+    fitAllModels(learningData, config, trainFeatures);
 
-% % Select best models
-% [topSingleCurve, selected Model] = ...
-%     selectBestModel(testFit,config.numFolds, numModels);
-% testFit_mat = cell2mat(testFit);
-numOfRepeats = 10;
-simFeatures = buildFeatureMaps(config, learningData, 0);
+% Define number of folds to use to select the best model
+numOfFoldsForSelection = 20;
 
-[topSingleCurve, selectedModel, scores] = selectBestModelBySimulation(selected_models, modelTypes, param, numOfRepeats, config,learningData.historyBaseVectors, simFeatures, learningData.spiketrain,kFoldParams, numOfCoupledNeurons, learningData.couplingBaseVectors, couplingData);
+% Select best model
+[topSingleModelID, topModelID, scores] = selectBestModelBySimulation(selected_models, modelTypes, param, numOfFoldsForSelection,...
+    config,learningData.historyBaseVectors, trainFeatures, learningData.spiketrain,kFoldParams, numOfCoupledNeurons,...
+    learningData.couplingBaseVectors, couplingData);
 
-PlotLogLikelihood(scores, config.numFolds, selectedModel, sessionName, neuronNumber, fCoupling, numOfCoupledNeurons)
+% Plot log likelihood of all models
+PlotLogLikelihood(scores, config.numFolds, topModelID, sessionName, neuronNumber, fCoupling, numOfCoupledNeurons)
 
-validationStimulusSingle = getStimulusByModelNumber(topSingleCurve, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.speedgrid, validationFeatures.thetaGrid);
-% Get Single model perfomace and parameters
+% Get test set stimulus of the best single model 
+testStimulusSingle = getStimulusByModelNumber(topSingleModelID, testFeatures.posgrid, testFeatures.hdgrid, testFeatures.speedgrid, testFeatures.thetaGrid);
+
+% Get best Single model perfomace and parameters
 [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiringRate, log_ll] = ...
-    getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSingle, param{topSingleCurve},...
-    modelTypes{topSingleCurve}, config.filter, numOfCoupledNeurons, validationCouplingData,...
-    learningData.historyBaseVectors, learningData.couplingBaseVectors, validationFeatures.thetaGrid, kFoldParams{topSingleCurve});
-learnedParams.modelNumber = topSingleCurve;
-% plot results
+    getModelMetricsAndParameters(config, testData.spiketrain, testStimulusSingle, param{topSingleModelID},...
+    modelTypes{topSingleModelID}, config.filter, numOfCoupledNeurons, testCouplingData,...
+    learningData.historyBaseVectors, learningData.couplingBaseVectors, testFeatures.thetaGrid, kFoldParams{topSingleModelID});
+
+% Record top single model
+learnedParams.modelNumber = topSingleModelID;
+
+% plot results of top single model
 plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
-    smoothPsthSim, neuronNumber, 'single', numOfCoupledNeurons, ISI,ISI.expISIPr,  sessionName,modelFiringRate,validationData, coupledNeurons, log_ll)
+    smoothPsthSim, neuronNumber, 'single', numOfCoupledNeurons, ISI,ISI.expISIPr,  sessionName,modelFiringRate,testData, coupledNeurons, log_ll)
 
-validationStimulusSelected = getStimulusByModelNumber(selectedModel, validationFeatures.posgrid, validationFeatures.hdgrid, validationFeatures.speedgrid, validationFeatures.thetaGrid);
-config.fTheta = sum(modelTypes{selectedModel} & config.thetaMask);
+% Get test set stimulus of the best  model 
+testStimulusBest = getStimulusByModelNumber(topModelID, testFeatures.posgrid, testFeatures.hdgrid, testFeatures.speedgrid, testFeatures.thetaGrid);
 
-% **********************
-% Create synthetic data 
-modelParam = param{selectedModel};
-modelType = modelTypes{selectedModel};
-kFoldParam = kFoldParams{selectedModel};
-[learnedParams, fTheta] = getLearnedParameters(modelParam, modelType, config, kFoldParam, learningData.historyBaseVectors, numOfCoupledNeurons, learningData.couplingBaseVectors);
-learningStimulus = getStimulusByModelNumber(selectedModel, simFeatures.posgrid, simFeatures.hdgrid, simFeatures.speedgrid, simFeatures.thetaGrid);
+% Create synthetic data for the best model
+
+% Get model info
+modelParam = param{topModelID};
+modelType = modelTypes{topModelID};
+kFoldParam = kFoldParams{topModelID};
+learnedParams = getLearnedParameters(modelParam, modelType, config, kFoldParam, learningData.historyBaseVectors, numOfCoupledNeurons, learningData.couplingBaseVectors);
+learningStimulus = getStimulusByModelNumber(topModelID, trainFeatures.posgrid, trainFeatures.hdgrid, trainFeatures.speedgrid, trainFeatures.thetaGrid);
 
 if config.fCoupling == 0 || (config.fCoupling == 1 && numOfCoupledNeurons == 0)
     couplingData = [];
 end
 
-[trainFiringRate, ~] = simulateResponsePillow(learningStimulus, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt, config, fTheta, simFeatures.thetaGrid,0,[]);
-[testFiringRate, ~] = simulateResponsePillow(validationStimulusSelected, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, validationCouplingData,config.dt, config, fTheta, validationFeatures.thetaGrid,0,[]);
+% Simulate response to the all experiment (train & test sets)
+[trainFiringRate, ~] = simulateNeuronResponse(learningStimulus, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt, config, 0,[]);
+[testFiringRate, ~] = simulateNeuronResponse(testStimulusBest, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, testCouplingData,config.dt, config, 0,[]);
 dt = config.dt;
 
+% Record the results 
 if (config.fCoupling == 1 && numOfCoupledNeurons > 0)
-    allStimulus = [learningStimulus; validationStimulusSelected];
+    allStimulus = [learningStimulus; testStimulusBest];
     tuningParams = learnedParams.tuningParams;
     couplingFilters = learnedParams.couplingFilters;
     historyFilter = learnedParams.spikeHistory;
     bias = learnedParams.biasParam;
 end
 
-spiketrain = [testFiringRate; trainFiringRate];
+spiketrain = [trainFiringRate; testFiringRate];
 
+% Save the simulation information
 if config.fCoupling == 0
     save(['rawDataForLearning/' sessionName '/simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 elseif config.fCoupling == 1 && numOfCoupledNeurons == 0
@@ -115,14 +134,14 @@ else
     save(['rawDataForLearning/' sessionName '/coupled_simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 end
 
- % Get Single model perfomace and parameters
+ % Get best model perfomace and parameters
 [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiringRate, log_ll] = ...
-    getModelMetricsAndParameters(config, validationData.spiketrain, validationStimulusSelected, param{selectedModel},...
-    modelTypes{selectedModel}, config.filter, numOfCoupledNeurons, validationCouplingData,...
-    learningData.historyBaseVectors, learningData.couplingBaseVectors, validationFeatures.thetaGrid, kFoldParams{selectedModel});
-learnedParams.modelNumber = selectedModel;
+    getModelMetricsAndParameters(config, testData.spiketrain, testStimulusBest, param{topModelID},...
+    modelTypes{topModelID}, config.filter, numOfCoupledNeurons, testCouplingData,...
+    learningData.historyBaseVectors, learningData.couplingBaseVectors, testFeatures.thetaGrid, kFoldParams{topModelID});
+learnedParams.modelNumber = topModelID;
 
 % plot results
 plotPerformanceAndParameters(config, learnedParams, metrics, smoothPsthExp, ...
-    smoothPsthSim, neuronNumber, 'best', numOfCoupledNeurons, ISI,ISI.expISIPr,  sessionName, modelFiringRate, validationData, coupledNeurons, log_ll)
+    smoothPsthSim, neuronNumber, 'best', numOfCoupledNeurons, ISI,ISI.expISIPr,  sessionName, modelFiringRate, testData, coupledNeurons, log_ll)
 end

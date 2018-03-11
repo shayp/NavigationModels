@@ -1,38 +1,67 @@
-function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiringRate, log_likekihood_final] = ...
+function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiringRate, totalLogLikelihood] = ...
     getModelMetricsAndParameters(config, spiketrain, stimulus, modelParams,...
     modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors, thetaGrid, kFoldParams)
 
 numOfFilters = 4;
-
-[learnedParams, config.fTheta] = getLearnedParameters(modelParams, modelType, config, kFoldParams, historyBaseVectors, numOfCoupledNeurons, couplingBaseVectors);
-
 simulationLength = length(spiketrain);
 modelFiringRate = zeros(simulationLength, config.numOfRepeats);
 simISI = [];
 mean_fr = nanmean(spiketrain);
-log_llh_mean = nansum(mean_fr - spiketrain .* log(mean_fr) + log(factorial(spiketrain))) / sum(spiketrain);
-log_likekihood_final = 0;
-selectedInd = 0;
 
+% Get the learned parameters for the choosed model
+learnedParams = getLearnedParameters(modelParams, modelType, config, kFoldParams, historyBaseVectors, numOfCoupledNeurons, couplingBaseVectors);
+
+% In case we have interaction filter, plot the k folds learned interactions
+if config.fCoupling && numOfCoupledNeurons > 0
+    figure();
+    plot(learnedParams.kFoldsCoupling)
+    title('Confidence interval coupling ');
+end
+
+
+% Caclulate the mean firing rate log likelihood, we will use it to comapre
+% to the model log likelihood
+log_llh_mean = nansum(mean_fr - spiketrain .* log(mean_fr) + log(factorial(spiketrain))) / sum(spiketrain);
+totalLogLikelihood = 0;
+
+% Run for x repeats
 for i = 1:config.numOfRepeats
+    
     % Get simulated firing rate
-    [modelFiringRate(:,i), modelLambdas] = simulateResponsePillow(stimulus, learnedParams.tuningParams, learnedParams, config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config, config.fTheta, thetaGrid,0, spiketrain);   
+    [modelFiringRate(:,i), modelLambdas] = simulateNeuronResponse(stimulus, learnedParams.tuningParams, learnedParams,...
+        config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config,0, spiketrain);  
+    
+    % Caclulate the log likelihood for current simulation
     log_llh_model = nansum(modelLambdas - spiketrain.*log(modelLambdas) + log(factorial(spiketrain))) / sum(spiketrain);
+    
+    % Caclulate the increase of currnet log likelihood from mean firing
+    % rate
     log_llh = log(2) * (-log_llh_model + log_llh_mean);
-        selectedInd = selectedInd + 1;
-        log_likekihood_final = log_likekihood_final + log_llh;
-        simISI = [simISI diff(find(modelFiringRate(:,i)))'];
-        modelFiringRate(:,i) = modelLambdas;
+    
+    % Add current log likelihood to the total amount
+    totalLogLikelihood = totalLogLikelihood + log_llh;
+    
+    % Get current simulation interspike interval
+    simISI = [simISI diff(find(modelFiringRate(:,i)))'];
+    
+    % TBD: decide if we want to use the lambdas or the simulated spike
+    % train as the firing rate
+    modelFiringRate(:,i) = modelLambdas;
 
 end
-log_likekihood_final = log_likekihood_final / selectedInd;
-log_likekihood_final
-summedFiringRate = sum(modelFiringRate,2) / selectedInd;
+
+% Get the mean of total log likelihood
+totalLogLikelihood = totalLogLikelihood / config.numOfRepeats;
+totalLogLikelihood
+
+% get the mean firing rate of the model
+meanModelFiringRate = sum(modelFiringRate,2) / config.numOfRepeats;
 
 % Get psth and metrics 
 [metrics, smoothPsthExp, smoothPsthSim, ISI] = ...
-    estimateModelPerformance(config.dt, spiketrain, summedFiringRate, filter, config.windowSize);
+    estimateModelPerformance(config.dt, spiketrain, meanModelFiringRate, filter, config.windowSize);
 
+% Get inter spike interval of the experiment
 maxSimISI = max(simISI);
 simISIPr = zeros(maxSimISI, 1);
 for j = 1:maxSimISI

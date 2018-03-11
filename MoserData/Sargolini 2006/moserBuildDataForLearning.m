@@ -10,63 +10,72 @@ dtEEG = 1/Fs;
 sampleRate = 1000;
 dtSpike = 1 / sampleRate;
 totlalLengthOfExp =  length(posx) * dtStimulus;
-
-poisiotnNans = [find(isnan(posx)); find(isnan(posy)); find(isnan(posx2)); find(isnan(posy2));];
-posx(poisiotnNans) = [];
-posx2(poisiotnNans) = [];
-posy(poisiotnNans) = [];
-posy2(poisiotnNans) = [];
-
-lengthOfStimulusMs = length(posx) * dtStimulus;
-
-
-posx = interp1(dtStimulus:dtStimulus:lengthOfStimulusMs, posx, dtSpike:dtSpike:lengthOfStimulusMs);
-posx2 = interp1(dtStimulus:dtStimulus:lengthOfStimulusMs, posx2, dtSpike:dtSpike:lengthOfStimulusMs);
-posy = interp1(dtStimulus:dtStimulus:lengthOfStimulusMs, posy, dtSpike:dtSpike:lengthOfStimulusMs);
-posy2 = interp1(dtStimulus:dtStimulus:lengthOfStimulusMs, posy2, dtSpike:dtSpike:lengthOfStimulusMs);
-
-scaledEEG = interp1(dtEEG:dtEEG:totlalLengthOfExp, EEG, dtSpike:dtSpike:totlalLengthOfExp)';
+post = post + dtSpike;
+post(end)
+totlalLengthOfExp
+posx = interp1(post, posx, post(1):dtSpike:totlalLengthOfExp);
+posx2 = interp1(post, posx2, post(1):dtSpike:totlalLengthOfExp);
+posy = interp1(post, posy, post(1):dtSpike:totlalLengthOfExp);
+posy2 = interp1(post, posy2, post(1):dtSpike:totlalLengthOfExp);
+length(EEG)
+length(dtSpike:dtEEG:totlalLengthOfExp)
+fPhase = 1;
+if length(EEG) ~= length(dtSpike:dtEEG:totlalLengthOfExp)
+    fPhase = 0;
+    'No phse'
+    
+    scaledEEG = zeros(length(dtSpike:dtSpike:totlalLengthOfExp),1);
+else
+    scaledEEG = interp1(dtSpike:dtEEG:totlalLengthOfExp, EEG, dtSpike:dtSpike:totlalLengthOfExp)';
+end
 posx = posx' + 50;
 posx2 = posx2' + 50;
 posy = posy' + 50;
 posy2 = posy2' + 50;
-headDirection = atan2(posy2-posy,posx2-posx)+pi/2;
-headDirection(headDirection < 0) = headDirection(headDirection<0)+2*pi; % go from 0 to 2*pi, without any negative numbers
-poisiotnNans = poisiotnNans * 20;
-scaledPosNans = [];
-poisiotnNans = unique(poisiotnNans);
-
-for i = 1:length(poisiotnNans);
-    scaledPosNans = [scaledPosNans (poisiotnNans(i) - 19):poisiotnNans(i)];
-end
-scaledPosNans(scaledPosNans > totlalLengthOfExp * 1000) = [];
 
 spikeTimes = floor(cellTS * 1000);
 spiketrain = double(ismember(1:totlalLengthOfExp / dtSpike, spikeTimes))';
 
+allnans = [find(isnan(posx)); find(isnan(posy)); find(isnan(posx2)); find(isnan(posy2)); find(isnan(scaledEEG))];
+posx(allnans) = [];posx2(allnans) = [];posy(allnans) = []; posy2(allnans) = []; scaledEEG(allnans) = []; spiketrain(allnans) = [];
 
-spiketrain(scaledPosNans) = []; scaledEEG(scaledPosNans) = [];
+headDirection = atan2(posy2-posy,posx2-posx)+pi/2;
+headDirection(headDirection < 0) = headDirection(headDirection<0)+2*pi; % go from 0 to 2*pi, without any negative numbers
+
+if min(posx) < 0
+    posx = posx -min(posx);
+end
+
+if min(posy) < 0
+    posy = posy -min(posy);
+end
+
+posx = posx / max(posx) * 100;
+posy = posy / max(posy) * 100;
+
 
 hdNan = find(isnan(headDirection));
 
 spiketrain(hdNan) = []; posx(hdNan) = []; posy(hdNan) = []; headDirection(hdNan) = []; scaledEEG(hdNan) = [];
-phaseNan = find(isnan(scaledEEG));
-scaledEEG(phaseNan) = [];
-hilb_eeg = hilbert(scaledEEG); % compute hilbert transform
-filt_eeg = atan2(imag(hilb_eeg),real(hilb_eeg))'; %inverse tangent (-pi to pi)
-ind = filt_eeg <0; filt_eeg(ind) = filt_eeg(ind)+2*pi; % from 0 to 2*pi
-phase = filt_eeg';
+if fPhase
+    hilb_eeg = hilbert(scaledEEG); % compute hilbert transform
+    filt_eeg = atan2(imag(hilb_eeg),real(hilb_eeg))'; %inverse tangent (-pi to pi)
+    ind = filt_eeg <0; filt_eeg(ind) = filt_eeg(ind)+2*pi; % from 0 to 2*pi
+    phase = filt_eeg';
+else
+    phase = scaledEEG;
+end
+
 phaseNan2 = find(isnan(phase));
 if length(phaseNan2) > 0
     'error'
 end
-spiketrain(phaseNan) = []; posx(phaseNan) = []; posy(phaseNan) = []; headDirection(phaseNan) = [];
-% timeToCut = 30;
-% posx(1:timeToCut) = [];
-% posy(1:timeToCut) = [];
-% headDirection(1:timeToCut) = [];
-% spiketrain(end - 30 + 1:end) = [];
-% phase(end - 30 + 1:end) = [];
+
+spiketrain(phaseNan2) = [];
+posx(phaseNan2) = [];
+posy(phaseNan2) = [];
+headDirection(phaseNan2) = [];
+phase(phaseNan2) = [];
 
 
 

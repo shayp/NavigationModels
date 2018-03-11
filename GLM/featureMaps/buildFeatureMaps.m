@@ -1,16 +1,15 @@
-function [features] = buildFeatureMaps(config, learningData, fTrain)
-% compute position matrix
+function [features] = buildFeatureMaps(config, learningData)
+
+% Build position design matrix
 [features.posgrid, features.xBins, features.yBins] = pos_map([learningData.posx learningData.posy], config.numOfPositionAxisParams, config.boxSize);
 
-% compute head direction matrix
+% Build head direction design matrix
 [features.hdgrid, features.hdVec] = hd_map(learningData.headDirection, config.numOfHeadDirectionParams);
 
-%smoothfr = conv(learningData.spiketrain, config.filter,'same');
-smoothfr = learningData.spiketrain;
-% compute theta matrix
-[features.thetaGrid, features.thetaVec] = theta_map(learningData.thetaPhase, config.numOfTheta, smoothfr,fTrain);
+% Build theta design matrix
+[features.thetaGrid, features.thetaVec] = theta_map(learningData.thetaPhase, config.numOfTheta);
 
-% compute speed matrix
-[features.speedgrid, features.speed, features.speedBins] = speed_map(learningData.posx,learningData.posy, config.sampleRate, config.maxSpeed, config.numOfSpeedBins, config.speedVec);
-
+% Build speed design matrix
+[features.speedgrid, features.speed, features.speedBins] = speed_map(learningData.posx,learningData.posy, config.sampleRate,...
+    config.numOfSpeedBins, config.speedVec);
 end

@@ -1,4 +1,4 @@
-%% function to find the right parameters given the model type
+% function to find the right parameters given the model type
 function [param_pos,param_hd,param_speed, param_Theta] = find_param(param,modelType,numPos,numHD, numSpeed, numTheta)
 
 param_pos = []; param_hd = []; param_speed = []; param_Theta = [];

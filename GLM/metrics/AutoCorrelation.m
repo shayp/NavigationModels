@@ -1,6 +1,6 @@
 clear all;
-networkName = '11207-21060503';
-neuronNumber = 13;
+networkName = '11025-19050503';
+neuronNumber = 1;
 load(['../rawDataForLearning/' networkName '/data_for_cell_' num2str(neuronNumber)]);
 spikeExp = find(spiketrain);  
 
@@ -25,6 +25,7 @@ plot(Tout, corrReal,'-k',Tout, corrHistory,'-r',Tout,corrCoupled,Tout,corrFully,
 legend('MEC data', 'History', 'Coupled');
 xlabel('time (ms)');
 ylabel('Auto correlation');
+
 %title('Auto correlation');
 %ylim([0 1]);
 

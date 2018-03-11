@@ -1,13 +1,13 @@
 %%
 clear all;
-networkName = '11025-19050503';
+networkName = '11025-20050501';
 addpath('../featureMaps');
 addpath('../General');
 addpath('../simulation');
 
 sessionName = networkName;
-neuron1 = 1;
-neuron2 = 3;
+neuron1 = 2;
+neuron2 = 6;
 stimulus = {};
 tuning = {};
 numOfNeurons = 2;
@@ -64,8 +64,7 @@ stimulus{2} = getStimulusByModelNumber(selectedModel, features.posgrid, features
 bias(2) = modelParams.biasParam;
 tuning{2} = modelParams.tuningParams;
 
-%history2 = modelParams.spikeHistory;
-history2 = history1;
+history2 = modelParams.spikeHistory;
 coupling2 = zeros(40, 1);
 
 historyLen = max(length(history1), length(history2));
@@ -79,8 +78,16 @@ couplingFilt(1:min(couplingLen, length(coupling1)),1,2) = coupling1;
 couplingFilt(1:min(couplingLen, length(coupling2)),2,1) = coupling2;
 simulationLength = length(posx);
 %%
+repeats = 1;
+response = [];
+for i = 1:repeats
+    response = [response; simulateCoupledNetworkResponse(numOfNeurons, stimulus, tuning, historyFilt, couplingFilt, bias,  config.dt, simulationLength, historyLen)];
+end
+posx = repmat(posx,repeats,1);
+posy = repmat(posy,repeats,1);
+headDirection = repmat(headDirection,repeats,1);
+phase = repmat(phase,repeats,1);
 
-response = simulateCoupledNetworkResponse(numOfNeurons, stimulus, tuning, historyFilt, couplingFilt, bias,  config.dt, simulationLength, historyLen);
 spiketrain = response(:,1);
 sum(spiketrain)
 mkdir(rawDatafolderPathSpecialFilter);

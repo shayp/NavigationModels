@@ -1,7 +1,7 @@
 clear all;
-addpath('General');
+addpath('../General');
 dt = 0.001;
-[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(15, 1/1000, [0.004 0.15], 0.02, 0.001);
+[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(1, 1/1000, [0.001 0.009], 1e-2, 0);
 %[~, ~, couplingBaseVectors] = buildBaseVectorsForPostSpikeAndCoupling(5, 1/1000, [0.001 0.03], 1, 0);
 
 figure();

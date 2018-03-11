@@ -1,106 +1,154 @@
-function [f, df, hessian] = ln_poisson_model(param,data,modelType, config, numOfCouplingParams)
+function [logLikelihood, gradient, hessian] = ln_poisson_model(param, data, modelType, config, numOfCouplingParams)
 
-tuningFeatures = data{1}; % subset of A
+% fetch stimulus, history and coupling info and spike train
+stimulusFeatures = data{1};
 designMatrix = data{2};
-spikeTrain = data{3}; % number of spikes
+spikeTrain = data{3};
+
+
+%Define regularization coefficents for each of the stimulus params
+posReg = 5e-2;
+hdReg = 5e-3;
+speedReg = 5e-1;
+thetaReg =5e-2;
+
+% Get the initalized bias param
 biasParam = param(1);
 
-% roughness regularizer weight - note: these are tuned using the sum of f,
-% and thus have decreasing influence with increasing amounts of data
-b_pos = 5e-2; b_hd = 5e-3;  b_speed = 5e-1; b_Theta =5e-2;
-%b_pos = 10e0; b_hd = 5e-3;  b_speed = 5e-3; b_Theta =5e-4;
-
+% The parameters are concatented difrently with and w\o coupling
+% We fetch the spike history, coupling and stiumulus params
 if config.fCoupling
-   spikeHistoryParam = param(2:1 + numOfCouplingParams); 
-   tuningParams = param(2 + numOfCouplingParams:end);
-   linerProjection = tuningFeatures * tuningParams + designMatrix * spikeHistoryParam + biasParam;
+    spikeHistoryParam = param(2:1 + numOfCouplingParams); 
+    stimulusParams = param(2 + numOfCouplingParams:end);
+   
+    % Calculate the linear projection for this case(with history
+    % information)
+    linerProjection = stimulusFeatures * stimulusParams + designMatrix * spikeHistoryParam + biasParam;
 else
-    tuningParams = param(2:end);
-    linerProjection = tuningFeatures * tuningParams + biasParam;
+    stimulusParams = param(2:end);
+    
+    % Calculate the linear projection for this case(without history
+    % information)
+    linerProjection = stimulusFeatures * stimulusParams + biasParam;
 end
 
+% Calculate firing rate by adding nonlinearity 
 firingRate = exp(linerProjection);
 
-% Negative Log likelihood
+% Calculate negative log likelihood
 ll_Trm0 = sum(firingRate)* config.dt;
 ll_Trm1 = -spikeTrain' * linerProjection;
 logLL = ll_Trm0 + ll_Trm1;
 
-% derivatives
+% calculate gradients for Newton-Raphson method 
 
-dlTuning0 = firingRate' * tuningFeatures;
-dlTuning1 = spikeTrain' * tuningFeatures;
-dlTuningParams = (dlTuning0 * config.dt - dlTuning1)';
+% calculate log likelihood derivative w.r.t the stimulus params
+dlTuning0 = firingRate' * stimulusFeatures;
+dlTuning1 = spikeTrain' * stimulusFeatures;
+dlStimulusParams = (dlTuning0 * config.dt - dlTuning1)';
+
+% calculate log likelihood derivative w.r.t the bias param
 dlBias = sum(firingRate) * config.dt - sum(spikeTrain);
 
 dlHistory = [];
+% In case we optomize for history and/or couling we 
+% calculate log likelihood derivative w.r.t the history/coupling params
+
 if config.fCoupling
     dlHistory0 = firingRate' * designMatrix;
     dlHistory1 = spikeTrain' * designMatrix;
     dlHistory = (dlHistory0 * config.dt - dlHistory1)';
 end
 
+% Compute hessian matrix for Newton-Raphson method 
+
+% Transform the firing rate prediction into a sparse diag
+% matrix (expLength X expLength)
 ratediag = spdiags(firingRate,0, length(spikeTrain), length(spikeTrain));
 
-HTuning = (tuningFeatures' * (bsxfun(@times,tuningFeatures,firingRate))) *  config.dt; 
-HBias = sum(firingRate) *  config.dt;
-HTuningBias = (sum(ratediag,1) * tuningFeatures)' *  config.dt;
+% Second deravative of log likelihood w.r.t stimulus
+HStimulus = (stimulusFeatures' * (bsxfun(@times,stimulusFeatures,firingRate))) *  config.dt; 
 
+% Second deravative of log likelihood w.r.t bias
+HBias = sum(firingRate) *  config.dt;
+
+% Second deravative of log likelihood w.r.t stimulus & bias
+HTuningBias = (sum(ratediag,1) * stimulusFeatures)' *  config.dt;
+
+% In case we optimized for history/coupling caclulate the needed hessians
 if config.fCoupling
+    
+    % Second deravative of log likelihood w.r.t history/coupling 
     HHistory = (designMatrix' * (bsxfun(@times,designMatrix,firingRate))) * config.dt;
-    HTuningHistory = ((designMatrix' * ratediag) * tuningFeatures)' *  config.dt;
+    
+    % Second deravative of log likelihood w.r.t history/coupling & stimulus
+    HStimulusHistory = ((designMatrix' * ratediag) * stimulusFeatures)' *  config.dt;
+    
+    % Second deravative of log likelihood w.r.t history/coupling & bias
     HHistoryBias = (firingRate' * designMatrix)' *  config.dt;
 else
     HHistory = [];
-    HTuningHistory = [];
+    HStimulusHistory = [];
     HHistoryBias = [];
 end
 
-%% find the P, H, S, or T parameters and compute their roughness penalties
+% find the position, head direction, speed and theta  parameters and compute their roughness penalties
 
 % initialize parameter-relevant variables
 J_pos = 0; J_pos_g = []; J_pos_h = []; 
 J_hd = 0; J_hd_g = []; J_hd_h = [];  
 J_speed = 0; J_speed_g = []; J_speed_h = [];  
 J_theta = 0; J_theta_g = []; J_theta_h = [];  
+
 % find the parameters
-[param_pos,param_hd,param_speed, param_theta] = find_param(tuningParams, modelType, config.numOfPositionParams,config.numOfHeadDirectionParams, config.numOfSpeedBins, config.numOfTheta);
+[param_pos,param_hd,param_speed, param_theta] = find_param(stimulusParams, modelType, config.numOfPositionParams,...
+    config.numOfHeadDirectionParams, config.numOfSpeedBins, config.numOfTheta);
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
-    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,b_pos, 2e-2);
+    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,posReg, 2e-2);
 end
 
 if ~isempty(param_hd)
-    [J_hd,J_hd_g,J_hd_h] = rough_penalty_1d_circ(param_hd,b_hd, 0);
+    [J_hd,J_hd_g,J_hd_h] = rough_penalty_1d_circ(param_hd,hdReg, 0);
 end
 
 if ~isempty(param_speed)
-    [J_speed,J_speed_g,J_speed_h] = rough_penalty_1d(param_speed,b_speed, 0);
+    [J_speed,J_speed_g,J_speed_h] = rough_penalty_1d(param_speed,speedReg, 0);
 end
 
 if ~isempty(param_theta)
-    [J_theta,J_theta_g,J_theta_h] = rough_penalty_1d_circ(param_theta,b_Theta, 0);
+    [J_theta,J_theta_g,J_theta_h] = rough_penalty_1d_circ(param_theta,thetaReg, 0);
 end
 
-%% compute f, the gradient, and the hessian 
 J_History = 0;
-dlCoupled = [];
+
+% TODO: consider to remove if not used
+% Add regularization for history/coupling coefficents
 if config.fCoupling && config.numOfHistoryParams
 %      J_History = 1e0 * sum(abs(spikeHistoryParam(3:end)));
 %      dlHistory(3:end) = dlHistory(3:end) + 1e0 * sign(spikeHistoryParam(3:end));
-      J_History = 1e0 * sum(abs(spikeHistoryParam));
-      dlHistory = dlHistory + 1e0 * sign(spikeHistoryParam);
+%       J_History = 1e0 * sum(abs(spikeHistoryParam));
+%       dlHistory = dlHistory + 1e0 * sign(spikeHistoryParam);
 end
-f = logLL + J_pos + J_hd + J_speed + J_theta + J_History;
-dlTuningParams = dlTuningParams + [J_pos_g; J_hd_g; J_speed_g; J_theta_g];
-df = [dlBias; dlHistory; dlTuningParams];
-HTuning = HTuning + blkdiag(J_pos_h,J_hd_h, J_speed_h, J_theta_h);
-hessian = [[HBias HHistoryBias' HTuningBias']; [HHistoryBias HHistory HTuningHistory']; [HTuningBias HTuningHistory HTuning]];
+
+% Calculate the log likelihood with regularization
+logLikelihood = logLL + J_pos + J_hd + J_speed + J_theta + J_History;
+
+% Calculate the stimulus gradients with the regularization
+dlStimulusParams = dlStimulusParams + [J_pos_g; J_hd_g; J_speed_g; J_theta_g];
+
+% Concatente all gradients
+gradient = [dlBias; dlHistory; dlStimulusParams];
+
+% Caclulate stimulus hessian with regularization
+HStimulus = HStimulus + blkdiag(J_pos_h,J_hd_h, J_speed_h, J_theta_h);
+
+% Concatente all hessians
+hessian = [[HBias HHistoryBias' HTuningBias']; [HHistoryBias HHistory HStimulusHistory']; [HTuningBias HStimulusHistory HStimulus]];
 
 
-%% smoothing functions called in the above script
-function [J,J_g,J_h] = rough_penalty_2d(param,beta, gamma)
+function [J,J_g,J_h] = rough_penalty_2d(param, smoothPanelty, l1Reg)
 
     numParam = numel(param);
     D1 = spdiags(ones(sqrt(numParam),1)*[-1 1],0:1,sqrt(numParam)-1,sqrt(numParam));
@@ -108,12 +156,11 @@ function [J,J_g,J_h] = rough_penalty_2d(param,beta, gamma)
     M1 = kron(eye(sqrt(numParam)),DD1); M2 = kron(DD1,eye(sqrt(numParam)));
     M = (M1 + M2);
  
-    
-    J = beta*0.5*param'*M*param + gamma * sum(abs(param));
-    J_g = beta*M*param + gamma * sign(param);
-    J_h = beta*M;
+    J = smoothPanelty*0.5*param'*M*param + l1Reg * sum(abs(param));
+    J_g = smoothPanelty*M*param + l1Reg * sign(param);
+    J_h = smoothPanelty*M;
 
-function [J,J_g,J_h] = rough_penalty_1d_circ(param,beta, gamma)
+function [J,J_g,J_h] = rough_penalty_1d_circ(param, smoothPanelty, l1Reg)
     
     numParam = numel(param);
     D1 = spdiags(ones(numParam,1)*[-1 1],0:1,numParam-1,numParam);
@@ -123,18 +170,18 @@ function [J,J_g,J_h] = rough_penalty_1d_circ(param,beta, gamma)
     DD1(1,:) = circshift(DD1(2,:),[0 -1]);
     DD1(end,:) = circshift(DD1(end-1,:),[0 1]);
     
-    J = beta*0.5*param'*DD1*param  + gamma * sum(abs(param));
-    J_g = beta*DD1*param + gamma * sign(param);
-    J_h = beta*DD1;
+    J = smoothPanelty*0.5*param'*DD1*param  + l1Reg * sum(abs(param));
+    J_g = smoothPanelty*DD1*param + l1Reg * sign(param);
+    J_h = smoothPanelty*DD1;
 
-function [J,J_g,J_h] = rough_penalty_1d(param,beta, gamma)
+function [J,J_g,J_h] = rough_penalty_1d(param, smoothPanelty, l1Reg)
 
     numParam = numel(param);
     D1 = spdiags(ones(numParam,1)*[-1 1],0:1,numParam-1,numParam);
     DD1 = D1'*D1;
-    J = beta*0.5*param'*DD1*param + gamma * sum(abs(param));
-    J_g = beta*DD1*param+ gamma * sign(param);
-    J_h = beta*DD1;
+    J = smoothPanelty*0.5*param'*DD1*param + l1Reg * sum(abs(param));
+    J_g = smoothPanelty*DD1*param+ l1Reg * sign(param);
+    J_h = smoothPanelty*DD1;
 
 
 

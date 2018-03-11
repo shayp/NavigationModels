@@ -1,11 +1,14 @@
 function PlotLogLikelihood(LLH_values, numFolds, selected_model, sessionName, neuronNumber, fCoupling, numOfCoupledNeurons)
 
+% Calculate the mean and variance of the log likelihood increase from mean
+% firing rate
 LLH_increase_mean = mean(LLH_values);
 LLH_increase_sem = std(LLH_values)/sqrt(numFolds);
 
+% Plot the mean and variance for each model
 figure();
 errorbar(LLH_increase_mean,LLH_increase_sem,'ok','linewidth',3)
-ylabel('Log likelihood increase from mean');
+ylabel('Log likelihood');
 
 title('Log likelihood increase from mean firing rate');
 hold on
@@ -15,8 +18,8 @@ hold off
 box off
 set(gca,'fontsize',20)
 set(gca,'XLim',[0 16]); set(gca,'XTick',1:15)
-set(gca,'XTickLabel',{'PHSV','PHS','PHV','PSV','HSV','PH','PS','PV','HS',...
-    'HV','SV','P','H','S','V'});
+set(gca,'XTickLabel',{'PHST','PHS','PHT','PST','HST','PH','PS','PT','HS',...
+    'HT','ST','P','H','S','T'});
 legend('Model performance','Selected model','Baseline', 'Location', 'bestoutside')
 
 if fCoupling == 1

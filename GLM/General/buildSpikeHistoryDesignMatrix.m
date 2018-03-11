@@ -3,8 +3,8 @@ function [spikeHistoryDesignMatrix] = buildSpikeHistoryDesignMatrix(numOfBaseVec
     % calculate the  base vectors
     [lengthOFBaseVectors,~] = size(baseVectors);
     
-    % Do convolution and remove extra bins
-    Y = conv2(spikeTrain,baseVectors,'full');
-    Y = [zeros(1,numOfBaseVectors); Y(1:end - lengthOFBaseVectors,:)];
-    spikeHistoryDesignMatrix = Y;
+    % Do convolution and remove extra bins, shift one been for time after
+    % spike
+    spikeHistoryDesignMatrix = conv2(spikeTrain,baseVectors,'full');
+    spikeHistoryDesignMatrix = [zeros(1,numOfBaseVectors); spikeHistoryDesignMatrix(1:end - lengthOFBaseVectors,:)];
 end

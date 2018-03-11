@@ -1,5 +1,5 @@
 clear all;
-baseFolder = 'archive/check';
+baseFolder = '../Graphs/';
 slash = '/';
 networkDirs = dir(baseFolder);
 
@@ -10,10 +10,10 @@ regex{3} = 'Neuron_*_History_Results_single.mat';
 regex{4} = 'Neuron_*_History_Results_best.mat';
 regex{5} = 'Neuron_*_Coupled_Results_single.mat';
 regex{6} = 'Neuron_*_Coupled_Results_best.mat';
+correlation = nan(6,700);
+varExplain = nan(6,700);
+mse = nan(6,700);
 
-correlation = {};
-varExplain = {};
-mse = {};
 cellsIndex = 0;
 for i = 1:length(networkDirs)
     if networkDirs(i).isdir
@@ -25,9 +25,9 @@ for i = 1:length(networkDirs)
             for k = 1:numOfNeurons
                 filePath = strcat(currentyPath, slash, currentFiles(k).name);
                 load(filePath);
-                correlation{j, cellsIndex + k} = modelMetrics.correlation;
-                varExplain{j, cellsIndex + k} = modelMetrics.varExplain;
-                mse{j, cellsIndex + k} = modelMetrics.mse;
+                correlation(j, cellsIndex + k) = modelMetrics.correlation;
+                varExplain(j, cellsIndex + k) = modelMetrics.varExplain;
+                mse(j, cellsIndex + k) = modelMetrics.mse;
 
             end
         end
@@ -38,8 +38,8 @@ end
 
 cellsIndex
 correlation
-corrMat = cell2mat(correlation);
-varMat = cell2mat(varExplain);
+corrMat = correlation;
+varMat = varExplain;
 singleCorrMat = corrMat([1 3 5],:);
 singleVarMat = varMat([1 3 5],:);
 singleVarMat(singleVarMat < 0) = nan;
@@ -48,11 +48,11 @@ BestVarMat = varMat([2 4 6],:);
 BestVarMat(BestVarMat < 0) = nan;
 [~, numOfNeurons] = size(corrMat);
 
-meansingleCorrMat = mean(singleCorrMat,2);
-stdCorrSingle = std(singleCorrMat') / sqrt(numOfNeurons);
+meansingleCorrMat = nanmean(singleCorrMat,2);
+stdCorrSingle = nanstd(singleCorrMat') / sqrt(numOfNeurons);
 
-meanBestCorrMat = mean(BestCorrMat,2);
-stdCorrBest = std(BestCorrMat') / sqrt(numOfNeurons);
+meanBestCorrMat = nanmean(BestCorrMat,2);
+stdCorrBest = nanstd(BestCorrMat') / sqrt(numOfNeurons);
 
 meansingleVarMat = nanmean(singleVarMat,2);
 stdVarSingle = nanstd(singleVarMat') / sqrt(numOfNeurons);
@@ -65,7 +65,7 @@ figure();
 subplot(2,1,1);
 errorbar(meansingleCorrMat, stdCorrSingle,'ok','linewidth',2);
 hold on;
-plot(0.5:3.5,mean(meansingleCorrMat) * ones(4,1),'--b','linewidth',2)
+plot(0.5:3.5,nanmean(meansingleCorrMat) * ones(4,1),'--b','linewidth',2)
 hold off;
 box off
 set(gca,'fontsize',10)
@@ -77,7 +77,7 @@ title('Single filter - Pearson correlation');
 subplot(2,1,2);
 errorbar(meanBestCorrMat, stdCorrBest,'ok','linewidth',2);
 hold on;
-plot(0.5:3.5,mean(meanBestCorrMat) * ones(4,1),'--b','linewidth',2)
+plot(0.5:3.5,nanmean(meanBestCorrMat) * ones(4,1),'--b','linewidth',2)
 hold off;
 box off
 set(gca,'fontsize',10)
@@ -92,7 +92,7 @@ figure();
 subplot(2,1,1);
 errorbar(meansingleVarMat, stdVarSingle,'ok','linewidth',2);
 hold on;
-plot(0.5:3.5,mean(meansingleVarMat) * ones(4,1),'--b','linewidth',2)
+plot(0.5:3.5,nanmean(meansingleVarMat) * ones(4,1),'--b','linewidth',2)
 hold off;
 box off
 set(gca,'fontsize',10)
@@ -104,7 +104,7 @@ title('Single filter - Fraction of explained variance');
 subplot(2,1,2);
 errorbar(meanBestVarMat, stdVarBest,'ok','linewidth',2);
 hold on;
-plot(0.5:3.5,mean(meanBestVarMat) * ones(4,1),'--b','linewidth',2)
+plot(0.5:3.5,nanmean(meanBestVarMat) * ones(4,1),'--b','linewidth',2)
 hold off;
 box off
 set(gca,'fontsize',10)
@@ -115,10 +115,10 @@ title('Best filters - Fraction of explained variance');
 
 figure();
 
-meanSingle = mean(mean(singleCorrMat));
+meanSingle = nanmean(nanmean(singleCorrMat));
 stdSingle = std(singleCorrMat);
 
-meanBest = mean(mean(BestCorrMat));
+meanBest = nanmean(nanmean(BestCorrMat));
 stdBest = std(BestCorrMat') / sqrt(numOfNeurons);
 bar([meanSingle, meanBest]);
 
@@ -136,7 +136,7 @@ bar([meanSingle, meanBest]);
 % title(' Mean squred error');
 % 
 % subplot(3,1,3);
-% errorbar(meanVarExp, stdVarExp,'ok','linewidth',3);
+% errorbar(meanVarExp, stdVarExp,'ok','linewidth',3);f
 % hold on;
 % plot(0.5:6.5,mean(meanVarExp) * ones(7,1),'--b','linewidth',2)
 % hold off;

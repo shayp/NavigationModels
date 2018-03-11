@@ -1,5 +1,5 @@
-function [tuning_curve] = compute_1d_tuning_curve_withInputVec(variable,fr,numBin,minVal,maxVal, var_vec)
-%bin it
+function [tuning_curve] = compute_1d_tuning_curve_withInputVec(variable,fr,numBin, var_vec)
+% Set tuning curve
 tuning_curve = nan(numBin,1);
 
 % compute mean fr for each bin
@@ -11,6 +11,5 @@ for n = 1:numBin
     end
     
 end
-
 
 return

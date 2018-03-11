@@ -4,11 +4,13 @@ function [couplingDesignMatrix] = buildCouplingDesignMatrix(numOfBaseVectors, ba
     [lengthOFBaseVectors,~] = size(baseVectors);
     
     % Do convolution and remove extra bins
-    Y = conv2(spikeTrain,baseVectors,'full');
+    couplingDesignMatrix = conv2(spikeTrain,baseVectors,'full');
+    
+    % In case we use acausal interaction, we take some time before spike 
     if acausalInteraction 
-        Y = [Y(timeBeforeSpike:end - lengthOFBaseVectors + timeBeforeSpike,:)];
+        couplingDesignMatrix = [couplingDesignMatrix(timeBeforeSpike:end - lengthOFBaseVectors + timeBeforeSpike,:)];
     else
-        Y = [zeros(1,numOfBaseVectors); Y(1:end - lengthOFBaseVectors,:)];
+        couplingDesignMatrix = [zeros(1,numOfBaseVectors); couplingDesignMatrix(1:end - lengthOFBaseVectors,:)];
     end
-    couplingDesignMatrix = Y;
+    
 end
