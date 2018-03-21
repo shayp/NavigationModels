@@ -52,7 +52,7 @@ for i = modelInd
         end
         
         % Simulate model response and get lambdas 
-        [~, modelLambdas] = simulateNeuronResponse(currStimulus, learnedParam.tuningParams, learnedParam, config.fCoupling, numOfCoupledNeurons, currCoupling, config.dt, config, 0, []);   
+        [~, modelLambdas, linearProjection] = simulateNeuronResponse(currStimulus, learnedParam.tuningParams, learnedParam, config.fCoupling, numOfCoupledNeurons, currCoupling, config.dt, config, 0, []);   
         
         % Calculate model log likelihood
         log_llh_model = nansum(modelLambdas - currspiketrain.*log(modelLambdas) + log(factorial(currspiketrain))) / sum(currspiketrain);
@@ -124,7 +124,7 @@ LL4 = modelScores(:,top4);
 % If the increase is signifacnt choose the better model
 
 if p_LL_12 < 0.05 
-    if p_LL_23 < 0.05 
+    if p_LL_23 < 0.05
         if p_LL_34 < 0.05
             selectedModel = top4;
         else
@@ -136,5 +136,7 @@ if p_LL_12 < 0.05
 else
     selectedModel = top1;
 end
+nanmean(modelScores)
+[~, selectedModel] = max(nanmean(modelScores));
 
 end

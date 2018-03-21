@@ -110,9 +110,36 @@ if config.fCoupling == 0 || (config.fCoupling == 1 && numOfCoupledNeurons == 0)
 end
 
 % Simulate response to the all experiment (train & test sets)
-[trainFiringRate, ~] = simulateNeuronResponse(learningStimulus, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt, config, 0,[]);
-[testFiringRate, ~] = simulateNeuronResponse(testStimulusBest, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, testCouplingData,config.dt, config, 0,[]);
+[trainFiringRate, trainLambdas, trainlinearProjection] = simulateNeuronResponse(learningStimulus, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt, config, 0,[]);
+[testFiringRate, testLambdas, testlinearProjection] = simulateNeuronResponse(testStimulusBest, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, testCouplingData,config.dt, config, 0,[]);
 dt = config.dt;
+
+% windowSize = 20;
+% [trainstimBins,trainexpBins, trainlambdasBins, trainsimspikesBins] = getNonLinearEstimator(trainlinearProjection, learningData.spiketrain, trainFiringRate, trainLambdas, windowSize);
+% [teststimBins, testexpBins, testlambdasBins, testsimspikesBins] = getNonLinearEstimator(testlinearProjection, testData.spiketrain, testFiringRate, testLambdas, windowSize);
+% 
+% 
+% 
+% figure();
+% timeConst = 1/1000 * windowSize;
+% subplot(1,2,1);
+% plot(trainstimBins, trainexpBins / timeConst ,'-k', trainstimBins, trainlambdasBins / timeConst, '-r', trainstimBins, trainsimspikesBins / timeConst, '-b',...
+%     'linewidth',2);
+% title('Nonlinear Fit - train'); 
+% legend('MEC ', 'Simulation - lambdas', 'Simulation - spikes');
+% xlabel('Linear projection');
+% ylabel('Firing Rate');
+% axis square;
+% 
+% subplot(1,2,2);
+% plot(teststimBins, testexpBins / timeConst ,'-k', teststimBins, testlambdasBins / timeConst, '-r', teststimBins, testsimspikesBins / timeConst, '-b',...
+%     'linewidth',2);
+% title('Nonlinear Fit - test'); 
+% legend('MEC ', 'Simulation - lambdas', 'Simulation - spikes');
+% xlabel('Linear projection');
+% ylabel('Firing Rate');
+% axis square;
+% drawnow;
 
 % Record the results 
 if (config.fCoupling == 1 && numOfCoupledNeurons > 0)
@@ -127,10 +154,13 @@ spiketrain = [trainFiringRate; testFiringRate];
 
 % Save the simulation information
 if config.fCoupling == 0
+    savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_NoHistory']);
     save(['rawDataForLearning/' sessionName '/simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 elseif config.fCoupling == 1 && numOfCoupledNeurons == 0
+    savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_History']);
     save(['rawDataForLearning/' sessionName '/history_simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 else
+     savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_Coupled']);
     save(['rawDataForLearning/' sessionName '/coupled_simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 end
 

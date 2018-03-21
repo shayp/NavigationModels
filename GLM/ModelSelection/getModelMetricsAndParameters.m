@@ -26,9 +26,9 @@ totalLogLikelihood = 0;
 
 % Run for x repeats
 for i = 1:config.numOfRepeats
-    
+
     % Get simulated firing rate
-    [modelFiringRate(:,i), modelLambdas] = simulateNeuronResponse(stimulus, learnedParams.tuningParams, learnedParams,...
+    [modelFiringRate(:,i), modelLambdas, linearProjection] = simulateNeuronResponse(stimulus, learnedParams.tuningParams, learnedParams,...
         config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config,0, spiketrain);  
     
     % Caclulate the log likelihood for current simulation
@@ -46,7 +46,7 @@ for i = 1:config.numOfRepeats
     
     % TBD: decide if we want to use the lambdas or the simulated spike
     % train as the firing rate
-    modelFiringRate(:,i) = modelLambdas;
+    %modelFiringRate(:,i) = modelLambdas;
 
 end
 
@@ -76,7 +76,8 @@ ISI.simISIPr = simISIPr;
 % Get the learned tuning curves
 [learnedParams.pos_param, learnedParams.hd_param, learnedParams.speed_param, learnedParams.theta_param] = ...
     find_param(learnedParams.allTuningParams, modelType, config.numOfPositionParams, config.numOfHeadDirectionParams, ...
-    config.numOfSpeedBins, config.numOfTheta);
+    config.numOfSpeedBins, config.allTheta);
+
 
 % IF the curves are not configured in the model, zeroize
 if numel(learnedParams.pos_param) ~= config.numOfPositionParams
@@ -91,7 +92,7 @@ if numel(learnedParams.speed_param) ~= config.numOfSpeedBins
     learnedParams.speed_param = 0;
     numOfFilters = numOfFilters - 1;
 end
-if numel(learnedParams.theta_param) ~= config.numOfTheta
+if numel(learnedParams.theta_param) ~= config.allTheta
     learnedParams.theta_param = 0;
     numOfFilters = numOfFilters - 1;
 end

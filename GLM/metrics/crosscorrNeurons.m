@@ -1,7 +1,7 @@
 clear all;
-networkName = '11025-19050503';
-neuron1 = 1;
-neuron2 = 3;
+networkName = '11207-21060503';
+neuron1 = 8;
+neuron2 = 13;
 load(['../rawDataForLearning/' networkName '/data_for_cell_' num2str(neuron1)]);
 spikeExp1 = find(spiketrain);  
 length(spikeExp1)
@@ -26,8 +26,8 @@ spikeHistory2 = find(spiketrain);
 
 load(['../rawDataForLearning/' networkName '/coupled_simulated_data_cell_'  num2str(neuron2)]);
 spikeCoupled2 = find(spiketrain);
- T = -205.5:10:205.5;
- Tout = -200:10:200;
+ T = -305.5:10:305.5;
+ Tout = -300:10:300;
 
 [corrReal1] = MyCrossCorrMS(spikeExp2,spikeExp1, T);
 [corrHistory1] = MyCrossCorrMS(spikeHistory2, spikeExp1,T);
@@ -63,12 +63,12 @@ axis square;
 
 
 figure();
-
+Tout = Tout * 1/1000;
 plot(Tout, corrReal1,'-k', Tout, corrFully1 ,'-r', Tout, corrHistoryOnly,'-b','lineWidth', 3);
-legend('Experiment','Fully oupled', 'History');
+legend('MEC data','Model - Coupled', 'Model - History only');
 
-xlabel('time (ms)');
-ylabel('Cross correlation');
+xlabel('Lag (s)');
+ylabel('Probability');
 title(['Cross correlation']);
 axis square;
 %ylim([0 inf]);

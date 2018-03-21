@@ -9,6 +9,7 @@ numFolds = size(kFoldParams,1);
 
 % If we used history/coupling in learning mode, the parameters are combined
 % in a different way
+ numOfFirstSpikeParams = 0;
 if config.fCoupling
 
     % Caclulate the number of coupling params(can be zero - only history)
@@ -17,13 +18,16 @@ if config.fCoupling
     % Set spike history filter by first getting a filter for each fold and
     % then calculating the mean
     learnedParams.spikeHistory = mean(historyBaseVectors * kFoldParams(:, 2:1 + config.numOfHistoryParams)', 2);
-   
+    if config.fFirstSpike
+        numOfFirstSpikeParams = config.numOfHistoryParams;
+        learnedParams.firstSpikeFilter = mean(historyBaseVectors * kFoldParams(:, 2 + config.numOfHistoryParams:1 + 2 * config.numOfHistoryParams)', 2);
+    end
     % If we have coupling filters
     if numOfCoupledNeurons > 0
 
         % Reshape the k-fold coupling params to a shape
         % of K X paramsLength X numOfCoupledNeurons
-        kFoldcouplingParams = reshape(kFoldParams(:,2 + config.numOfHistoryParams:couplingParamsLength + config.numOfHistoryParams + 1),...
+        kFoldcouplingParams = reshape(kFoldParams(:,2 + config.numOfHistoryParams + numOfFirstSpikeParams:couplingParamsLength + config.numOfHistoryParams + numOfFirstSpikeParams + 1),...
             numFolds, config.numOfCouplingParams, numOfCoupledNeurons);
         
         % Run for each coupled neuron
@@ -39,7 +43,7 @@ if config.fCoupling
     end
     
     % Set stimulus params
-    stimulusParams = modelParams(2 + config.numOfHistoryParams + couplingParamsLength:end);
+    stimulusParams = modelParams(2 + config.numOfHistoryParams + couplingParamsLength + numOfFirstSpikeParams:end);
 else
     % Set stimulus params
     stimulusParams = modelParams(2:end);

@@ -7,9 +7,9 @@ spikeTrain = data{3};
 
 
 %Define regularization coefficents for each of the stimulus params
-posReg = 5e-2;
+posReg = 5e-3;
 hdReg = 5e-3;
-speedReg = 5e-1;
+speedReg = 1e-2;
 thetaReg =5e-2;
 
 % Get the initalized bias param
@@ -102,11 +102,12 @@ J_theta = 0; J_theta_g = []; J_theta_h = [];
 
 % find the parameters
 [param_pos,param_hd,param_speed, param_theta] = find_param(stimulusParams, modelType, config.numOfPositionParams,...
-    config.numOfHeadDirectionParams, config.numOfSpeedBins, config.numOfTheta);
+    config.numOfHeadDirectionParams, config.numOfSpeedBins, config.allTheta);
+
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
-    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,posReg, 2e-2);
+    [J_pos,J_pos_g,J_pos_h] = rough_penalty_2d(param_pos,posReg, 0);
 end
 
 if ~isempty(param_hd)
@@ -117,8 +118,9 @@ if ~isempty(param_speed)
     [J_speed,J_speed_g,J_speed_h] = rough_penalty_1d(param_speed,speedReg, 0);
 end
 
+
 if ~isempty(param_theta)
-    [J_theta,J_theta_g,J_theta_h] = rough_penalty_1d_circ(param_theta,thetaReg, 0);
+    [J_theta, J_theta_g, J_theta_h] = rough_penalty_1d_circ(param_theta(1:config.numOfTheta),thetaReg, 0);
 end
 
 J_History = 0;

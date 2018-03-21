@@ -73,7 +73,7 @@ modelStimulus{15} = [thetaGrid];
 
 % Use all models
 selected_models = 1:(numModels);
-
+selected_models = [8 12];
 % For each model fit the parameters of the model
 for n = selected_models
     

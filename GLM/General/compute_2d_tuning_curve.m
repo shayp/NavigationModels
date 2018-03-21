@@ -18,6 +18,7 @@ for i  = 1:numBin
     
     % find the times the animal was in the bin
     if i == numBin
+        x_ind = find(variable_x >= start_x);
         x_ind = find(variable_x >= start_x & variable_x <= stop_x);
     else
         x_ind = find(variable_x >= start_x & variable_x < stop_x);
@@ -32,9 +33,11 @@ for i  = 1:numBin
         
         % find the times the animal was in the bin
         if j == numBin
-            y_ind = find(variable_y >= start_y & variable_y <= stop_y);
+            %y_ind = find(variable_y >= start_y & variable_y <= stop_y);
+            y_ind = find(variable_y >= start_y );
         else
             y_ind = find(variable_y >= start_y & variable_y < stop_y);
+
         end
         
         % get intersection indexes of the time for current x and y bins
@@ -49,7 +52,7 @@ end
 % Remove nans
 tuning_curve(isnan(tuning_curve)) = 0;
 
-% Smooth the tuning curve
+%Smooth the tuning curve
 BIN = 3;
 FilterSize=10; 
 FilterSize=FilterSize/2;

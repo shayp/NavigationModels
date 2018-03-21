@@ -1,7 +1,7 @@
 clear all;
-networkName = '11084-03020501';
-neuron1 = 2;
-neuron2 = 2;
+networkName = '11025-19050503';
+neuron1 = 1;
+neuron2 = 3;
 load(['../rawDataForLearning/' networkName '/data_for_cell_' num2str(neuron1)]);
 spikeseries1 = spiketrain;
 spikeExp1 = find(spiketrain);  
@@ -22,7 +22,10 @@ length(spikeExp2)
 figure();
 
 plot(Tout, corrReal1,'-k', 'lineWidth', 3);
-ylim([0 0.3]);
+axis square;
+xlabel('Lag (ms)');
+ylabel('Probability');
+%ylim([0.05 0.3]);
 % 
 % fr1 = histcounts(spikeExp1, 0:5:length(spikeseries1));
 % fr2 = histcounts(spikeExp2, 0:5:length(spikeseries2));

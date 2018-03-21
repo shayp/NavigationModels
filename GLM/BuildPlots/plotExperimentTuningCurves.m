@@ -51,6 +51,7 @@ subplot(3,2,5)
 polarplot([features.thetaVec features.thetaVec(1)],[theta_curve; theta_curve(1)],'k','linewidth',2)
 title('Theta phase')
 
+
 % Save and plot figure
 mkdir(['./Graphs/' sessionName]);
 savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) 'expeimentCurves']);

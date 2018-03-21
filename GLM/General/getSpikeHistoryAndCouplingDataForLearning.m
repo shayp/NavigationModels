@@ -2,7 +2,14 @@ function designMatrix = getSpikeHistoryAndCouplingDataForLearning(config, learni
 
 % Get histort desifn matrix
 designMatrix = buildSpikeHistoryDesignMatrix(config.numOfHistoryParams,...
-    learningData.historyBaseVectors, learningData.spiketrain);
+    learningData.historyBaseVectors, learningData.spiketrain, config.firstSpikeWindow);
+
+if config.fFirstSpike
+    firstSpikeDesignMatrix = builFirstSpikeDesignMatrix(config.numOfHistoryParams,...
+    learningData.historyBaseVectors, learningData.spiketrain, config.firstSpikeWindow);
+    designMatrix = [designMatrix firstSpikeDesignMatrix];
+
+end
 
 for i = 1:numOfCoupledNeurons
     % Get curent coupled neuron design matrix

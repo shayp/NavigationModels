@@ -38,6 +38,8 @@ for k = 1:numFolds
     % Divide data to train and test
     test_ind  = (k-1) * lengthOfFold + 1:k * lengthOfFold;
     train_ind = setdiff(1:numel(spiketrain),test_ind);
+     %train_ind  = (k-1) * lengthOfFold + 1:k * lengthOfFold;
+     %test_ind = setdiff(1:numel(spiketrain),train_ind);
 
     % Get test data: spikes, stimulus and coupling information
     test_spikes = spiketrain(test_ind);

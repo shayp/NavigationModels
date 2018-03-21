@@ -21,6 +21,7 @@ set(gca,'XLim',[0 16]); set(gca,'XTick',1:15)
 set(gca,'XTickLabel',{'PHST','PHS','PHT','PST','HST','PH','PS','PT','HS',...
     'HT','ST','P','H','S','T'});
 legend('Model performance','Selected model','Baseline', 'Location', 'bestoutside')
+ylim([-1 1.5]);
 
 if fCoupling == 1
     if numOfCoupledNeurons > 0

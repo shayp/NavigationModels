@@ -8,7 +8,7 @@ yBins = linspace(0, boxSize(2), nbins);
 posgrid = zeros(length(pos), nbins * nbins);
 
 % Run for each position sample
-for idx = 1:length(pos)
+for idx = 1:size(pos,1)
     
     % figure out the position index
     [~, xcoor] = min(abs(pos(idx,1)-xBins));

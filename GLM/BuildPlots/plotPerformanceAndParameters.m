@@ -61,7 +61,7 @@ if  numel(modelParams.hd_param) == config.numOfHeadDirectionParams
     polarplot([hd_vector hd_vector(1)],[hd_response hd_response(1)],'k','linewidth',2);
     title('Learned Head Direction');
 end
-
+numel(modelParams.speed_param)
 % If the model includes head direction tuning, step in
 if numel(modelParams.speed_param) == config.numOfSpeedBins
     currSubPlotIndex = currSubPlotIndex + 1;
@@ -71,7 +71,7 @@ if numel(modelParams.speed_param) == config.numOfSpeedBins
     
     % Plot speed tuning
     subplot(numOfRows,2,currSubPlotIndex)
-    plot(speedBins, speed_response,'k','linewidth',2);
+     plot(speedBins, speed_response,'k','linewidth',2);
     axis square
     title('Learned speed');
     xlabel('speed (cm/s)')
@@ -80,11 +80,14 @@ if numel(modelParams.speed_param) == config.numOfSpeedBins
 end
 
 % If the model includes theta phase tuning, step in
-if numel(modelParams.theta_param) == config.numOfTheta
+if numel(modelParams.theta_param) > 1
     currSubPlotIndex = currSubPlotIndex + 1;
-
+    
+    % Get the subset of theta filter
+    thetaTuning = modelParams.theta_param(1:config.numOfTheta);
+    
     % update mean response for each bin
-    theta_response = scale_factor*scale_factor_theta*exp(modelParams.theta_param);
+    theta_response = scale_factor*scale_factor_theta*exp(thetaTuning);
     
     % Plot theta phase tuning
     subplot(numOfRows,2,currSubPlotIndex)

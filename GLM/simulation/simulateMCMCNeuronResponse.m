@@ -1,6 +1,7 @@
-function [firingRate, finalLambdas, linearProjection] = simulateNeuronResponse(stimulus, tuningCurves, learnedParams, fCoupling,  numOfCoupledNeurons, couplingData,...
+function [firingRate, finalLambdas, linearProjection] = simulateMCMCNeuronResponse(stimulus, tuningCurves, learnedParams, fCoupling,  numOfCoupledNeurons, couplingData,...
     dt, config,fPlot,realSpikes)
-
+numOfSamplesPerSpike = 100;
+windowSize = 500;
 simulationLength = size(stimulus, 1);
 
 % Set linear projection, lambdas  history interaction values mixed stimulus
@@ -10,16 +11,13 @@ linearProjection = zeros(simulationLength, 1);
 historyInteraction = zeros(simulationLength, 1);
 lambdas =  zeros(simulationLength, 1);
 mixedStimulus = zeros(simulationLength, 1);
-if config.fFirstSpike && config.fCoupling
-    firstSpikeFilterLen = length(learnedParams.firstSpikeFilter);
-end
-
+ispk = 0;
 % Number of bins to update in each iteration
 nbinsPerEval = 10;
 
 % calculate - W * X + b for every time step
 linearProjection = stimulus * tuningCurves' + learnedParams.biasParam;
-
+tspnxt = exprnd(1);
 % In case we have history/coupling interaction
 if fCoupling
     
@@ -51,18 +49,18 @@ end
 % Integrated lambdas up to current point
 lambdaPrev = 0;
 
+indexOfSpike = zeros(numOfSamplesPerSpike, 1);
+
 numOfSpikes = 0;
 
-% draw time of next spike (in rescaled time) 
-tspnext = exprnd(1);
 
 % Loop index
 currIndex = 1;
 
-while currIndex < simulationLength 
+while currIndex < simulationLength
     
     % Get indexes to update in current iteration
-    currBins = currIndex:min(currIndex+nbinsPerEval-1,simulationLength);
+    currBins = currIndex:min(currIndex+windowSize-1,simulationLength);
     
     % Linear projection of both stimulus history and coupling(if used)
     mixedStimulus(currBins) = linearProjection(currBins) + historyInteraction(currBins);
@@ -72,70 +70,57 @@ while currIndex < simulationLength
 
     % Update lambdas of current bins
     lambdas(currBins) = currLambdas;
-
     % Caclulate the cumulative intensity
     rrcum = cumsum(currLambdas) + lambdaPrev;
-    
-    % If we passed the threshold(random exp value with mean 1), we have a spike 
-    if (tspnext >= rrcum(end)) 
-        
-        % No spike in this window
-        
-        % Update index for next iteration 
-        currIndex = currBins(end)+1;
-        
-        % Set the prev lambda to be current cumaltive lambda
-        lambdaPrev = rrcum(end);
-        
-    else
-        
+    for j = 1:numOfSamplesPerSpike
+        tspnext = exprnd(1);    
+        % If we passed the threshold(random exp value with mean 1), we have a spike 
+        if (tspnext >= rrcum(end)) 
+            % No spike in this window
+            indexOfSpike(j) = -1;
+        else
         % We had a spike in this iteration
         
         % Get spike index
-        ispk =  currBins(find(rrcum>=tspnext, 1, 'first'));
+        currspk =  currBins(find(rrcum>=tspnext, 1, 'first'));
+        indexOfSpike(j) = currspk;
+        end
+    end
+    if (sum(indexOfSpike == -1) > sum(indexOfSpike > -1) )
+        currIndex = currBins(end) + 1;
         
-        % Update number of spikes
-        numOfSpikes = numOfSpikes + 1;
-        
-        % Record spike
+        % Set the prev lambda to be current cumaltive lambda
+        lambdaPrev = rrcum(end);
+    else
+        spikeInd = datasample(indexOfSpike(indexOfSpike > -1), 1);
+        ispk = spikeInd;
         firingRate(ispk) = 1;
-        
+        lambdaPrev = 0;
+                
+        % Update index of next iteration
+        currIndex = ispk+1;
+        numOfSpikes  = numOfSpikes + 1;
         % If we have an history filter
-        if fCoupling
+        if fCoupling && currIndex < simulationLength
             
-            minInd = max(1,ispk - config.firstSpikeWindow);
-            if config.fFirstSpike && sum(firingRate(minInd:ispk - 1)) == 0
-                filterEnd = min(simulationLength, ispk+firstSpikeFilterLen); 
-                iiPostSpk = ispk+1:filterEnd; 
-                historyInteraction(iiPostSpk) =  historyInteraction(iiPostSpk) + learnedParams.firstSpikeFilter(1:length(iiPostSpk));
-
-            end            
             % determine bins for adding post spike filter
             currHistoryFilterIndex = min(simulationLength, ispk+spikeHistoryFilterLength); 
             
             % time bins affected by post-spike filter
             iiPostSpk = ispk+1:currHistoryFilterIndex; 
             
-            % TODO: find better solution for the explosion problem
-            % If the interaction value of the neurons is bigger then a
-            % Threshold set the history filter instead of adding it
-            historyInteraction(iiPostSpk) = historyInteraction(iiPostSpk) + learnedParams.spikeHistory(1:length(iiPostSpk));
+            if currIndex > 40 &&  sum(firingRate(currIndex - 40:currIndex)) > 4
+                historyInteraction(iiPostSpk) = learnedParams.spikeHistory(1:length(iiPostSpk));
+%                 iiInit = ispk+1:min(currHistoryFilterIndex, ispk + 3);
+%                 historyInteraction(iiInit) =  learnedParams.spikeHistory(1:length(iiInit));
+            else
+                %historyInteraction(iiPostSpk) =  learnedParams.spikeHistory(1:length(iiPostSpk));
+                historyInteraction(iiPostSpk) =  historyInteraction(iiPostSpk) + learnedParams.spikeHistory(1:length(iiPostSpk));
+            end     
             
         end
-        
-        % draw next spike time
-        tspnext = exprnd(1);  
-        
-        % Reset the neuron lambda
-        lambdaPrev = 0; 
-        
-        % Update index of next iteration
-        currIndex = ispk+1;
-        muISI = currIndex/(sum(numOfSpikes));
-        nbinsPerEval = max(20, round(1.5*muISI)); 
     end
-    
-end
+end       
 
 % Plot the information of current simulation if configured
 if fPlot

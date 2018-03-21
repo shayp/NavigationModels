@@ -13,10 +13,12 @@ phase = [];
 config.boxSize = boxSize;
 
 % The window size to use for psth
-config.windowSize = 40;
+config.windowSize = 20;
 
 config.fCoupling = fCoupling;
+config.fFirstSpike = 1;
 
+config.firstSpikeWindow = 20;
 % The rate that we use for the analysis
 config.sampleRate = 1000;
 config.dt = 1/1000;
@@ -25,7 +27,7 @@ config.dt = 1/1000;
 config.psthdt = 1/1000 * config.windowSize;
 
 % Number of folds to use
-config.numFolds = 2;
+config.numFolds = 4;
 
 % Num of models we compare
 config.numModels = 15;
@@ -41,10 +43,11 @@ config.numOfHeadDirectionParams = 30;
 
 % num of spedd params
 config.numOfSpeedBins = 8;
-
+config.nSpeedThetaAxisBins = 15;
 % Num of theta phase params
 config.numOfTheta = 20;
-
+config.ThetaSTAParams = 0;
+config.allTheta = config.numOfTheta + config.ThetaSTAParams;
 % num of position in an axis params
 config.numOfPositionAxisParams = 25;
 
@@ -53,7 +56,7 @@ config.numOfPositionAxisParams = 25;
 config.numOfPositionParams = config.numOfPositionAxisParams * config.numOfPositionAxisParams;
 
 % The number of all stimulus params
-config.numofTuningParams = config.numOfHeadDirectionParams + config.numOfTheta + config.numOfPositionParams + config.numOfSpeedBins;
+%config.numofTuningParams = config.numOfHeadDirectionParams + config.allTheta + config.numOfPositionParams + config.numOfSpeedBins;
 
 % Max speed to use
 config.maxSpeed = 50;
@@ -98,43 +101,45 @@ load([folderPath num2str(neuronNumber)]);
 
 % The ratio of training from the session
 trainRatio = 0.8;
+testRatio = 1 - trainRatio;
 
 % Number of bins for training
-trainBins = ceil(length(posx) * trainRatio);
+test_ind  = 1:ceil(length(posx) * testRatio);
+train_ind = setdiff(1:numel(posx),test_ind);
 
 % Get neuron number, position, head direction and spike train data of the neuron we want to
 % learn
 learningData.neuronNumber = neuronNumber;
-learningData.posx = posx(1:trainBins);
-learningData.posy = posy(1:trainBins);
-learningData.headDirection = headDirection(1:trainBins);
-learningData.spiketrain = spiketrain(1:trainBins);
+learningData.posx = posx(train_ind);
+learningData.posy = posy(train_ind);
+learningData.headDirection = headDirection(train_ind);
+learningData.spiketrain = spiketrain(train_ind);
 
 fPhaseExist = 1;
 
 % Check if we have phase data, add phase data in case we have, otherwise
 % use zeros 
-if length(phase) < trainBins
+if length(phase) ~= length(posx)
     fPhaseExist = 0;
     'No phase in this neuron'
-    learningData.thetaPhase = zeros(trainBins, 1);
+    learningData.thetaPhase = zeros(length(train_ind), 1);
 else
-    learningData.thetaPhase = phase(1:trainBins);
+    learningData.thetaPhase = phase(train_ind);
 end
 
 % Set valildation data
 validationData.neuronNumber = neuronNumber;
-validationData.posx = posx(trainBins + 1:end);
-validationData.posy = posy(trainBins + 1:end);
-validationData.headDirection = headDirection(trainBins + 1:end);
-validationData.spiketrain = spiketrain(trainBins + 1:end);
+validationData.posx = posx(test_ind);
+validationData.posy = posy(test_ind);
+validationData.headDirection = headDirection(test_ind);
+validationData.spiketrain = spiketrain(test_ind);
 
 % Check if we have phase data, add phase data in case we have, otherwise
 % use zeros 
 if fPhaseExist == 0
     validationData.thetaPhase = zeros(length(validationData.posx), 1);
 else
-    validationData.thetaPhase = phase(trainBins + 1:end);
+    validationData.thetaPhase = phase(test_ind);
 end
 
 % ********** Calculate interspike interval **********
@@ -182,13 +187,13 @@ if config.fCoupling == 1
         
         % train params
         load([folderPath num2str(coupledNeurons(i))]);
-        couplingData.data(i).posx  = posx(1:trainBins);
-        couplingData.data(i).posy  = posy(1:trainBins);
-        couplingData.data(i).headDirection  = headDirection(1:trainBins);
-        couplingData.data(i).spiketrain  = spiketrain(1:trainBins);
+        couplingData.data(i).posx  = posx(train_ind);
+        couplingData.data(i).posy  = posy(train_ind);
+        couplingData.data(i).headDirection  = headDirection(train_ind);
+        couplingData.data(i).spiketrain  = spiketrain(train_ind);
  
         % test params
-        validationCouplingData.data(i).spiketrain  = spiketrain(trainBins + 1:end);
+        validationCouplingData.data(i).spiketrain  = spiketrain(test_ind);
     end
 end
 

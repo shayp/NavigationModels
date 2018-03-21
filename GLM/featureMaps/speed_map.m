@@ -8,7 +8,6 @@ vely = diff([posy(1); posy]);
 % Caclulate speed for each bin
 speed = sqrt(velx.^2+vely.^2) * sampleRate;
 
-
 speed_grid = zeros(numel(posx),numOfSpeedBins);
 
 for i = 2:numel(posx)

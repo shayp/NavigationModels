@@ -19,7 +19,7 @@ end
 
 % TBD:  smooth  firing rate
 psthExp = conv(psthExp, smoothingFilter,'same');
-%psthSim = conv(psthSim, smoothingFilter,'same'); 
+psthSim = conv(psthSim, smoothingFilter,'same'); 
 
 
 %Caclulate cross correlation between psth
