@@ -3,6 +3,9 @@ function [metrics, learnedParams, smoothPsthExp, smoothPsthSim, ISI, modelFiring
     modelType, filter, numOfCoupledNeurons, couplingData, historyBaseVectors, couplingBaseVectors, thetaGrid, kFoldParams)
 
 numOfFilters = 4;
+if config.fPhaseLocking
+    numOfFilters = numOfFilters  + 1;
+end
 simulationLength = length(spiketrain);
 modelFiringRate = zeros(simulationLength, config.numOfRepeats);
 simISI = [];
@@ -16,6 +19,8 @@ if config.fCoupling && numOfCoupledNeurons > 0
     figure();
     plot(learnedParams.kFoldsCoupling)
     title('Confidence interval coupling ');
+    close(gcf)
+
 end
 
 
@@ -29,7 +34,7 @@ for i = 1:config.numOfRepeats
 
     % Get simulated firing rate
     [modelFiringRate(:,i), modelLambdas, linearProjection] = simulateNeuronResponse(stimulus, learnedParams.tuningParams, learnedParams,...
-        config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config,0, spiketrain);  
+        config.fCoupling, numOfCoupledNeurons, couplingData, config.dt, config,thetaGrid,0, spiketrain);  
     
     % Caclulate the log likelihood for current simulation
     log_llh_model = nansum(modelLambdas - spiketrain.*log(modelLambdas) + log(factorial(spiketrain))) / sum(spiketrain);
@@ -74,9 +79,9 @@ ISI.simISITimes = simISITimes;
 ISI.simISIPr = simISIPr;
 
 % Get the learned tuning curves
-[learnedParams.pos_param, learnedParams.hd_param, learnedParams.speed_param, learnedParams.theta_param] = ...
+[learnedParams.pos_param, learnedParams.hd_param, learnedParams.speed_param, learnedParams.theta_param, learnedParams.phaseLockParams] = ...
     find_param(learnedParams.allTuningParams, modelType, config.numOfPositionParams, config.numOfHeadDirectionParams, ...
-    config.numOfSpeedBins, config.allTheta);
+    config.numOfSpeedBins, config.allTheta,  config.fPhaseLocking, config.numOfPhaseLockingFilters);
 
 
 % IF the curves are not configured in the model, zeroize

@@ -27,6 +27,14 @@ scale_factor_hd = mean(exp(modelParams.pos_param))*mean(exp(modelParams.speed_pa
 scale_factor_spd = mean(exp(modelParams.pos_param))*mean(exp(modelParams.hd_param))*mean(exp(modelParams.theta_param));
 scale_factor_theta =  mean(exp(modelParams.pos_param))*mean(exp(modelParams.hd_param))*mean(exp(modelParams.speed_param));
 
+if config.fPhaseLocking
+    scale_factor_phaseLock = mean(exp(modelParams.pos_param))*mean(exp(modelParams.hd_param))*mean(exp(modelParams.speed_param)) * mean(exp(modelParams.theta_param));
+    scale_factor_pos = scale_factor_pos * mean(exp(modelParams.phaseLockParams));
+    scale_factor_hd = scale_factor_hd * mean(exp(modelParams.phaseLockParams));
+    scale_factor_spd = scale_factor_spd * mean(exp(modelParams.phaseLockParams));
+    scale_factor_theta = scale_factor_theta * mean(exp(modelParams.phaseLockParams));
+end
+
 figure();
 
 
@@ -61,7 +69,7 @@ if  numel(modelParams.hd_param) == config.numOfHeadDirectionParams
     polarplot([hd_vector hd_vector(1)],[hd_response hd_response(1)],'k','linewidth',2);
     title('Learned Head Direction');
 end
-numel(modelParams.speed_param)
+
 % If the model includes head direction tuning, step in
 if numel(modelParams.speed_param) == config.numOfSpeedBins
     currSubPlotIndex = currSubPlotIndex + 1;
@@ -95,6 +103,23 @@ if numel(modelParams.theta_param) > 1
     title('Learned Theta Phase');
 end
 
+% If the model includes theta phase tuning, step in
+if config.fPhaseLocking && numel(modelParams.phaseLockParams) == config.numOfPhaseLockingFilters
+    currSubPlotIndex = currSubPlotIndex + 1;
+    
+    % Get the subset of theta filter
+    phaseLockTuning = modelParams.phaseLockParams;
+    
+    % update mean response for each bin
+    phaseLock_response = scale_factor*scale_factor_phaseLock*exp(phaseLockTuning);
+    
+    % Plot theta phase tuning
+    subplot(numOfRows,2,currSubPlotIndex)
+    polarplot([thetaBins thetaBins(1)],[phaseLock_response phaseLock_response(1)],'k','linewidth',2)
+    title('Phase locking filter');
+end
+
+
 % Save figure
 if config.fCoupling
     if numOfCoupledNeurons > 0
@@ -105,9 +130,36 @@ if config.fCoupling
 else
     savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_ParametersLearned_' titleEnd]);
 end
+close(gcf)
 
 % In case we learned post spike filter or coupling, plot their parameters
 if config.fCoupling
+    if config.fPhaseLocking
+        figure();    
+        % Get post spike filter length and time ticks
+        historyLen = length(modelParams.firstSpikeFilter);
+        timeSeriesHistory = linspace(1 * config.dt, historyLen * config.dt, historyLen);
+        dashline = ones(historyLen,1);
+
+        % Plot post spike filter
+        plot(timeSeriesHistory, exp(modelParams.spikeHistory + modelParams.firstSpikeFilter),'-r',...
+            timeSeriesHistory, exp(modelParams.spikeHistory ),'-b',...
+            timeSeriesHistory, dashline, '--k','linewidth',2);
+        ylim([0 5]);
+        legend('First spike in session', 'All spikes');
+       
+        title('Post Spike Filter');
+        xlabel('Time (s)')
+        ylabel('Gain');
+            % Save figure
+        if numOfCoupledNeurons > 0
+            savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_Coupled_post-spike_' titleEnd]);
+        else
+            savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_history_post-spike_' titleEnd]);
+        end
+        close(gcf)
+
+    end
     figure();
     
     % Get post spike filter length and time ticks
@@ -155,6 +207,7 @@ if config.fCoupling
     else
         savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_history_interactionLearned_' titleEnd]);
     end
+    close(gcf)
 
 end
 
@@ -189,6 +242,8 @@ else
     savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_ModelResponse_' titleEnd]);
 end
 
+%close(gcf)
+
 % Plot Inter spike interval
 figure();
 isiTicks = config.dt:config.dt:length(expISI)* config.dt;
@@ -211,4 +266,7 @@ else
     savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_ISI_' titleEnd]);
 end
 drawnow;
+
+close(gcf)
+
 end

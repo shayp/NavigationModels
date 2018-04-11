@@ -1,11 +1,21 @@
-function [numModels, testFitMetrics, trainFitMetrics, param, modelStimulus,modelType, kfoldsParam, selected_models] = fitAllModels(learnedParameters, config, features)
+function [numModels, testFitMetrics, trainFitMetrics, param, modelStimulus,modelType, kfoldsParam, selected_models] = fitAllModels(learnedParameters, config, features, initTrainParam)
+
+lengthOfTrain = length(learnedParameters.spiketrain);
+designMat  = [];
+validation_ind  = 1:ceil(lengthOfTrain * config.validationRatio);
+train_ind = setdiff(1:lengthOfTrain,validation_ind);
 
 % Get all grids of sttimuls
-posgrid = features.posgrid;
-hdgrid = features.hdgrid;
-speedgrid = features.speedgrid;
-thetaGrid = features.thetaGrid;
-
+posgrid = features.posgrid(train_ind,:);
+hdgrid = features.hdgrid(train_ind,:);
+speedgrid = features.speedgrid(train_ind,:);
+thetaGrid = features.thetaGrid(train_ind,:);
+if config.fPhaseLocking
+    phaseLockGrid = features.phaseLockGrid(train_ind,:);
+end
+if config.fCoupling
+    designMat = features.designMatrix(train_ind,:);
+end
 % Set the number of models we want to learn
 numModels = config.numModels;
 
@@ -73,15 +83,18 @@ modelStimulus{15} = [thetaGrid];
 
 % Use all models
 selected_models = 1:(numModels);
-selected_models = [8 12];
 % For each model fit the parameters of the model
 for n = selected_models
     
     % **Print** Current model
     fprintf('\t- Fitting model %d of %d\n', n, numModels);
-    
-    [testFitMetrics{n},trainFitMetrics{n},param{n}, kfoldsParam{n}] = fit_model(modelStimulus{n},  learnedParameters.spiketrain, ...
-        modelType{n}, numFolds, config, features.designMatrix);
+    currStimulus = modelStimulus{n};
+    if config.fPhaseLocking
+        currStimulus = [currStimulus phaseLockGrid];
+    end
+
+    [testFitMetrics{n},trainFitMetrics{n},param{n}, kfoldsParam{n}] = fit_model(currStimulus,  learnedParameters.spiketrain(train_ind), ...
+        modelType{n}, numFolds, config, designMat, initTrainParam);
 end
 
 % If we have not learned a certain model - put nans in his metrics ans zero

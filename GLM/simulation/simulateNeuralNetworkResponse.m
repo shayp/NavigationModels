@@ -24,7 +24,7 @@ tspnext = exprnd(1,1,numOfNeurons);
 lambdaPrev = zeros(1,numOfNeurons); 
 
 % How much bins to include in each loop iteration
-nbinsPerEval = 10;
+nbinsPerEval = 1;
 
 % loop index
 currIndex = 1;

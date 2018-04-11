@@ -1,16 +1,16 @@
 % function to find the right parameters given the model type
-function [param_pos,param_hd,param_speed, param_Theta] = find_param(param,modelType,numPos,numHD, numSpeed, numTheta)
+function [param_pos,param_hd,param_speed, param_Theta, param_PhaseLock] = find_param(param,modelType,numPos,numHD, numSpeed, numTheta, fPhaseLocking, nPhaseLocking)
 
-param_pos = []; param_hd = []; param_speed = []; param_Theta = [];
+param_pos = []; param_hd = []; param_speed = []; param_Theta = []; param_PhaseLock = [];
 
 if all(modelType == [1 0 0 0]) 
-    param_pos = param;
+    param_pos = param(1:numPos);
 elseif all(modelType == [0 1 0 0]) 
-    param_hd = param;
+    param_hd = param(1:numHD);
 elseif all(modelType == [0 0 1 0]) 
-    param_speed = param;
+    param_speed = param(1:numSpeed);
 elseif all(modelType == [0 0 0 1]) 
-    param_Theta = param;
+    param_Theta = param(1:numTheta);
     
 elseif all(modelType == [1 1 0 0])
     param_pos = param(1:numPos);
@@ -52,5 +52,10 @@ elseif all(modelType == [1 1 1 1])
     param_hd = param(numPos+1:numPos+numHD);
     param_speed = param(numPos+numHD+1:numPos+numHD+numSpeed);
     param_Theta = param(numPos+numHD+numSpeed+1:numPos+numHD+numSpeed+numTheta);
+end
+if fPhaseLocking
+    param_PhaseLock = param(end - nPhaseLocking + 1:end);
+end
+
 end
     

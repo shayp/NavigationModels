@@ -7,10 +7,11 @@ spikeTrain = data{3};
 
 
 %Define regularization coefficents for each of the stimulus params
-posReg = 5e-3;
+posReg = 5e-1;
 hdReg = 5e-3;
 speedReg = 1e-2;
 thetaReg =5e-2;
+phaseLockReg =1e-3;
 
 % Get the initalized bias param
 biasParam = param(1);
@@ -96,14 +97,15 @@ end
 
 % initialize parameter-relevant variables
 J_pos = 0; J_pos_g = []; J_pos_h = []; 
+J_phaseLock = 0; J_PhaseLock_g = []; J_PhaseLock_h = []; 
+
 J_hd = 0; J_hd_g = []; J_hd_h = [];  
 J_speed = 0; J_speed_g = []; J_speed_h = [];  
 J_theta = 0; J_theta_g = []; J_theta_h = [];  
 
 % find the parameters
-[param_pos,param_hd,param_speed, param_theta] = find_param(stimulusParams, modelType, config.numOfPositionParams,...
-    config.numOfHeadDirectionParams, config.numOfSpeedBins, config.allTheta);
-
+[param_pos,param_hd,param_speed, param_theta, param_phaseLock] = find_param(stimulusParams, modelType, config.numOfPositionParams,...
+    config.numOfHeadDirectionParams, config.numOfSpeedBins, config.allTheta, config.fPhaseLocking, config.numOfPhaseLockingFilters);
 
 % compute the contribution for f, df, and the hessian
 if ~isempty(param_pos)
@@ -123,28 +125,24 @@ if ~isempty(param_theta)
     [J_theta, J_theta_g, J_theta_h] = rough_penalty_1d_circ(param_theta(1:config.numOfTheta),thetaReg, 0);
 end
 
-J_History = 0;
-
-% TODO: consider to remove if not used
-% Add regularization for history/coupling coefficents
-if config.fCoupling && config.numOfHistoryParams
-%      J_History = 1e0 * sum(abs(spikeHistoryParam(3:end)));
-%      dlHistory(3:end) = dlHistory(3:end) + 1e0 * sign(spikeHistoryParam(3:end));
-%       J_History = 1e0 * sum(abs(spikeHistoryParam));
-%       dlHistory = dlHistory + 1e0 * sign(spikeHistoryParam);
+if ~isempty(param_phaseLock)
+    [J_phaseLock, J_PhaseLock_g, J_PhaseLock_h] = rough_penalty_1d_circ(param_phaseLock,phaseLockReg, 1e0);
 end
 
+
+
+
 % Calculate the log likelihood with regularization
-logLikelihood = logLL + J_pos + J_hd + J_speed + J_theta + J_History;
+logLikelihood = logLL + J_pos + J_hd + J_speed + J_theta + J_phaseLock;
 
 % Calculate the stimulus gradients with the regularization
-dlStimulusParams = dlStimulusParams + [J_pos_g; J_hd_g; J_speed_g; J_theta_g];
+dlStimulusParams = dlStimulusParams + [J_pos_g; J_hd_g; J_speed_g; J_theta_g; J_PhaseLock_g];
 
 % Concatente all gradients
 gradient = [dlBias; dlHistory; dlStimulusParams];
 
 % Caclulate stimulus hessian with regularization
-HStimulus = HStimulus + blkdiag(J_pos_h,J_hd_h, J_speed_h, J_theta_h);
+HStimulus = HStimulus + blkdiag(J_pos_h,J_hd_h, J_speed_h, J_theta_h, J_PhaseLock_h);
 
 % Concatente all hessians
 hessian = [[HBias HHistoryBias' HTuningBias']; [HHistoryBias HHistory HStimulusHistory']; [HTuningBias HStimulusHistory HStimulus]];

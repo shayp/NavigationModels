@@ -1,13 +1,18 @@
 function [top1, selectedModel, modelScores] = selectBestModelBySimulation(modelInd, modelTypes, modelParams, numOfRepeats, config, historyBaseVectors, simFeatures, simspiketrain,kFoldParams, numOfCoupledNeurons,couplingBaseVectors, couplingData)
 
 modelScores = nan(numOfRepeats, config.numModels);
-
 % Get length of the validation set
-validationLength = length(simspiketrain);
+validationLength = length(simspiketrain) * config.validationRatio;
+validInd = 1:validationLength;
+validationCoupling = couplingData;
+validationSpiketrain = simspiketrain(validInd);
 
+% Get only current fold spike train for each coupled neuron
+for k = 1:numOfCoupledNeurons
+    validationCoupling.data(k).spiketrain = couplingData.data(k).spiketrain(validInd);
+end
 % Calculate the length of each fold in the validation set
 foldLength = ceil(validationLength / numOfRepeats);
-
 'current model '
 
 for i = modelInd
@@ -23,9 +28,8 @@ for i = modelInd
         numOfCoupledNeurons, couplingBaseVectors);
     
     % Get current model stimulus
-    stimulus = getStimulusByModelNumber(i, simFeatures.posgrid, simFeatures.hdgrid,...
-        simFeatures.speedgrid, simFeatures.thetaGrid);
-
+    stimulus = getStimulusByModelNumber(i, simFeatures.posgrid(validInd,:), simFeatures.hdgrid(validInd,:),...
+        simFeatures.speedgrid(validInd,:), simFeatures.thetaGrid(validInd,:));
     % Run for x repeats
     for j = 1:numOfRepeats
         
@@ -33,7 +37,7 @@ for i = modelInd
         cuurStep = min(j * foldLength,validationLength);
         
         % Get current iteration spike train
-        currspiketrain = simspiketrain((j-1) * foldLength + 1:cuurStep,:);
+        currspiketrain = validationSpiketrain((j-1) * foldLength + 1:cuurStep,:);
         
         % Get current iteration mean firing rate
         curr_mean_fr = nanmean(currspiketrain);
@@ -44,7 +48,7 @@ for i = modelInd
         % Get curr stimulus
         currStimulus = stimulus((j-1) * foldLength + 1:cuurStep,:);
         
-        currCoupling = couplingData;
+        currCoupling = validationCoupling;
         
         % Get only current fold spike train for each coupled neuron
         for k = 1:numOfCoupledNeurons
@@ -52,7 +56,7 @@ for i = modelInd
         end
         
         % Simulate model response and get lambdas 
-        [~, modelLambdas, linearProjection] = simulateNeuronResponse(currStimulus, learnedParam.tuningParams, learnedParam, config.fCoupling, numOfCoupledNeurons, currCoupling, config.dt, config, 0, []);   
+        [~, modelLambdas, linearProjection] = simulateNeuronResponse(currStimulus, learnedParam.tuningParams, learnedParam, config.fCoupling, numOfCoupledNeurons, currCoupling, config.dt, config,simFeatures.thetaGrid, 0, []);   
         
         % Calculate model log likelihood
         log_llh_model = nansum(modelLambdas - currspiketrain.*log(modelLambdas) + log(factorial(currspiketrain))) / sum(currspiketrain);
@@ -123,9 +127,9 @@ LL4 = modelScores(:,top4);
 
 % If the increase is signifacnt choose the better model
 
-if p_LL_12 < 0.05 
-    if p_LL_23 < 0.05
-        if p_LL_34 < 0.05
+if p_LL_12 < 0.01 
+    if p_LL_23 < 0.01
+        if p_LL_34 < 0.01
             selectedModel = top4;
         else
             selectedModel = top3;
@@ -136,7 +140,5 @@ if p_LL_12 < 0.05
 else
     selectedModel = top1;
 end
-nanmean(modelScores)
-[~, selectedModel] = max(nanmean(modelScores));
 
 end

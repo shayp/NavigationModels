@@ -12,4 +12,8 @@ function [features] = buildFeatureMaps(config, learningData)
 % Build speed design matrix
 [features.speedgrid, features.speed, features.speedBins] = speed_map(learningData.posx,learningData.posy, config.sampleRate,...
     config.numOfSpeedBins, config.speedVec);
+
+if config.fPhaseLocking
+    [features.phaseLockGrid,features.phaseLock_vec] = trigered_theta_map(learningData.thetaPhase,config.numOfPhaseLockingFilters, learningData.spiketrain, config.phaseLockWindow);
+end
 end

@@ -56,5 +56,6 @@ title('Theta phase')
 mkdir(['./Graphs/' sessionName]);
 savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) 'expeimentCurves']);
 drawnow;
+close(gcf)
 
 end

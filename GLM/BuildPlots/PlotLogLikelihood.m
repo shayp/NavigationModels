@@ -35,5 +35,5 @@ else
      save(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_logLikelihood'], 'LLH_values', 'LLH_values');
         savefig(['./Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_NoHistory_logLikelihood']);
 end
-
+close(gcf)
 end

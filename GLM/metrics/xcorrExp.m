@@ -1,7 +1,7 @@
 clear all;
-networkName = '11025-19050503';
+networkName = '11025-01060511';
 neuron1 = 1;
-neuron2 = 3;
+neuron2 = 1;
 load(['../rawDataForLearning/' networkName '/data_for_cell_' num2str(neuron1)]);
 spikeseries1 = spiketrain;
 spikeExp1 = find(spiketrain);  

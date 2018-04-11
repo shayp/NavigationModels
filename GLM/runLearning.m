@@ -30,7 +30,7 @@ end
 
 
 % Get learning data
-[config, learningData, couplingData, testData, testCouplingData, expISI, posx, posy, boxSize,sampleRate,headDirection, phase] =...
+[config, learningData, couplingData, testData, testCouplingData, expISI, posx, posy, boxSize,sampleRate,headDirection,phase,fr,  allCouplingData] =...
     loadDataForLearning(data_path, configFilePath, neuronNumber, fCoupling, coupledNeurons);
 
 
@@ -58,16 +58,20 @@ mean_fr = sum(learningData.spiketrain) / length(learningData.spiketrain) / confi
 [pos_curve, hd_curve, speed_curve, theta_curve] = ...
     computeTuningCurves(learningData, trainFeatures, config, smooth_fr);
 
+initTrainParam.pos = reshape(pos_curve, config.numOfPositionParams,1);
+initTrainParam.hd = hd_curve;
+initTrainParam.speed = speed_curve;
+initTrainParam.theta = theta_curve;
 % Plot experiment tuning curve
 plotExperimentTuningCurves(config, trainFeatures, pos_curve, hd_curve, speed_curve, theta_curve, neuronNumber, learningData, sessionName, mean_fr);
 
 
 % Fit model
 [numModels, testFit, trainFit, param, Models,modelTypes, kFoldParams, selected_models] = ...
-    fitAllModels(learningData, config, trainFeatures);
+    fitAllModels(learningData, config, trainFeatures, initTrainParam);
 
 % Define number of folds to use to select the best model
-numOfFoldsForSelection = 20;
+numOfFoldsForSelection = 8;
 
 % Select best model
 [topSingleModelID, topModelID, scores] = selectBestModelBySimulation(selected_models, modelTypes, param, numOfFoldsForSelection,...
@@ -109,9 +113,11 @@ if config.fCoupling == 0 || (config.fCoupling == 1 && numOfCoupledNeurons == 0)
     couplingData = [];
 end
 
+simStim = [testStimulusBest; learningStimulus];
+simPhaseGrid = [testFeatures.thetaGrid; trainFeatures.thetaGrid];
+
 % Simulate response to the all experiment (train & test sets)
-[trainFiringRate, trainLambdas, trainlinearProjection] = simulateNeuronResponse(learningStimulus, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, couplingData, config.dt, config, 0,[]);
-[testFiringRate, testLambdas, testlinearProjection] = simulateNeuronResponse(testStimulusBest, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, testCouplingData,config.dt, config, 0,[]);
+[simFiringRate, ~, ~] = simulateNeuronResponse(simStim, learnedParams.tuningParams, learnedParams, config.fCoupling,  numOfCoupledNeurons, allCouplingData, config.dt, config,simPhaseGrid, 0,fr);
 dt = config.dt;
 
 % windowSize = 20;
@@ -150,17 +156,17 @@ if (config.fCoupling == 1 && numOfCoupledNeurons > 0)
     bias = learnedParams.biasParam;
 end
 
-spiketrain = [trainFiringRate; testFiringRate];
+spiketrain = simFiringRate;
 
 % Save the simulation information
 if config.fCoupling == 0
-    savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_NoHistory']);
+    %savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_NoHistory']);
     save(['rawDataForLearning/' sessionName '/simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 elseif config.fCoupling == 1 && numOfCoupledNeurons == 0
-    savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_History']);
+    %savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_History']);
     save(['rawDataForLearning/' sessionName '/history_simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 else
-     savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_Coupled']);
+     %savefig(['Graphs/' sessionName '/Neuron_' num2str(neuronNumber) '_CurveFit_Coupled']);
     save(['rawDataForLearning/' sessionName '/coupled_simulated_data_cell_' num2str(neuronNumber)], 'posx', 'posy', 'boxSize','sampleRate','headDirection', 'spiketrain');
 end
 

@@ -1,5 +1,5 @@
 function [config, learningData, couplingData, validationData, validationCouplingData,...
-    isi, posx, posy, boxSize,sampleRate,headDirection, phase] = loadDataForLearning(folderPath,  configFilePath, neuronNumber, fCoupling, coupledNeurons)
+    isi, posx, posy, boxSize,sampleRate,headDirection, phase,spiketrain, allCouplingData] = loadDataForLearning(folderPath,  configFilePath, neuronNumber, fCoupling, coupledNeurons)
 
 % First load the config file
 load(configFilePath);
@@ -18,7 +18,7 @@ config.windowSize = 20;
 config.fCoupling = fCoupling;
 config.fFirstSpike = 1;
 
-config.firstSpikeWindow = 20;
+config.firstSpikeWindow = 35;
 % The rate that we use for the analysis
 config.sampleRate = 1000;
 config.dt = 1/1000;
@@ -33,7 +33,7 @@ config.numFolds = 4;
 config.numModels = 15;
 
 % Num of repeats for simulation
-config.numOfRepeats = 400;
+config.numOfRepeats = 100;
 
 
 % *********** Learned parametrs config **************
@@ -43,11 +43,10 @@ config.numOfHeadDirectionParams = 30;
 
 % num of spedd params
 config.numOfSpeedBins = 8;
-config.nSpeedThetaAxisBins = 15;
 % Num of theta phase params
-config.numOfTheta = 20;
-config.ThetaSTAParams = 0;
-config.allTheta = config.numOfTheta + config.ThetaSTAParams;
+config.numOfTheta = 10;
+
+config.allTheta = config.numOfTheta ;
 % num of position in an axis params
 config.numOfPositionAxisParams = 25;
 
@@ -64,6 +63,13 @@ config.maxSpeed = 50;
 % speed bins
 config.speedVec = [0 1 4 8 14 26 38 50];
 
+%  ********************* Phase lock config *********************
+config.fPhaseLocking = 1;
+if fCoupling == 0
+    config.fPhaseLocking = 0;
+end
+config.numOfPhaseLockingFilters = 10;
+config.phaseLockWindow = 125;
 
 %  ********************* History and coupling config *********************
 
@@ -98,12 +104,18 @@ config.filter = filter;
 
 % ********** Load params for learning **********
 load([folderPath num2str(neuronNumber)]);
+spTimes = find(spiketrain);
+isiInd = [0; diff(spTimes)];
+spiketrain(spTimes(isiInd == 1 | isiInd == 2)) = 0;
 
 % The ratio of training from the session
 trainRatio = 0.8;
 testRatio = 1 - trainRatio;
-
+config.validationRatio = 0.25;
 % Number of bins for training
+% train_ind = 1:ceil(length(posx) * trainRatio);
+% test_ind = setdiff(1:numel(posx),train_ind);
+
 test_ind  = 1:ceil(length(posx) * testRatio);
 train_ind = setdiff(1:numel(posx),test_ind);
 
@@ -151,7 +163,16 @@ for i = 1:maxISI
 end
 
 isi = isi / length(spikeDistance);
-
+% figure();
+% subplot(2,1,1);
+% plot(isi);
+% xlim([0 50]);
+% subplot(2,1,2);
+% plot(cumsum(isi));
+% xlim([0 100]);
+ind = find(cumsum(isi) > 0.65);
+config.firstSpikeWindow = min(150,ind(1));
+%config.phaseLockWindow = config.firstSpikeWindow;
 
 % ************ Base vectors for history and coupling ************
 
@@ -177,7 +198,7 @@ learningData.couplingBaseVectors = couplingFilter';
 
 couplingData = [];
 validationCouplingData = [];
-
+allCouplingData = [];
 % ****** Add coupled neurons information for test and train
 if config.fCoupling == 1
 
@@ -191,7 +212,7 @@ if config.fCoupling == 1
         couplingData.data(i).posy  = posy(train_ind);
         couplingData.data(i).headDirection  = headDirection(train_ind);
         couplingData.data(i).spiketrain  = spiketrain(train_ind);
- 
+        allCouplingData.data(i).spiketrain = spiketrain;
         % test params
         validationCouplingData.data(i).spiketrain  = spiketrain(test_ind);
     end

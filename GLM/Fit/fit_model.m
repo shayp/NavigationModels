@@ -1,11 +1,10 @@
-function [testFit,trainFit,param_mean, paramMat] = fit_model(features, spiketrain, modelType, numFolds, config, designMatrix)
+function [testFit,trainFit,param_mean, paramMat] = fit_model(features, spiketrain, modelType, numFolds, config, designMatrix, initTrainParam)
 
 % **Print** - Model type
 modelType
 
 % Get the num of stimulus params
 [~,numStimulusParams] = size(features);
-
 % Calculate length of each fold
 lengthOfFold = floor(numel(spiketrain) / numFolds);
 
@@ -25,6 +24,8 @@ end
 
 % Num of params is include stimulus coupling and bias params
 numOfLearnedParams = numStimulusParams + numOfCouplingParams + 1;
+
+initStimParams = fillInitParams(initTrainParam, modelType, config.fPhaseLocking, config);
 
 %Build params matrix for each fold
 paramMat = nan(numFolds,numOfLearnedParams);
@@ -50,6 +51,9 @@ for k = 1:numFolds
     
     % Get train data: spikes, stimulus and coupling information
     train_spikes = spiketrain(train_ind);
+    spTimes = find(train_spikes);
+    isiInd = [0; diff(spTimes)];
+    train_spikes(spTimes(isiInd == 1)) = 0;  
     train_features = features(train_ind,:);
     if config.fCoupling
         train_designMat = designMatrix(train_ind,:);
@@ -73,9 +77,9 @@ for k = 1:numFolds
     % the prev fold learned param
     if k == 1
         init_param =  1e-3*randn(numOfLearnedParams, 1);
+        init_param(end - numStimulusParams + 1:end) = initStimParams;
     else
         init_param = param;
-
     end
     
     % Define the loss function

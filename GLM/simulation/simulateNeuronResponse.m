@@ -1,5 +1,5 @@
 function [firingRate, finalLambdas, linearProjection] = simulateNeuronResponse(stimulus, tuningCurves, learnedParams, fCoupling,  numOfCoupledNeurons, couplingData,...
-    dt, config,fPlot,realSpikes)
+    dt, config,phaseGrid,fPlot,realSpikes)
 
 simulationLength = size(stimulus, 1);
 
@@ -8,6 +8,7 @@ simulationLength = size(stimulus, 1);
 firingRate = zeros(simulationLength, 1);
 linearProjection = zeros(simulationLength, 1);
 historyInteraction = zeros(simulationLength, 1);
+thetaPhaseCurrent = zeros(simulationLength, 1);
 lambdas =  zeros(simulationLength, 1);
 mixedStimulus = zeros(simulationLength, 1);
 if config.fFirstSpike && config.fCoupling
@@ -15,7 +16,7 @@ if config.fFirstSpike && config.fCoupling
 end
 
 % Number of bins to update in each iteration
-nbinsPerEval = 10;
+nbinsPerEval = 1;
 
 % calculate - W * X + b for every time step
 linearProjection = stimulus * tuningCurves' + learnedParams.biasParam;
@@ -57,19 +58,28 @@ numOfSpikes = 0;
 tspnext = exprnd(1);
 
 % Loop index
-currIndex = 1;
+currIndex = 2;
 
 while currIndex < simulationLength 
     
+    phaseLockingInd = max(1, currIndex - config.phaseLockWindow);
+    if config.fPhaseLocking &&  sum(firingRate(phaseLockingInd:currIndex - 1)) == 0
+        linearProjection(currIndex) = linearProjection(currIndex) +  learnedParams.phaseLockParams(phaseGrid(currIndex,:) > 0);
+    end
+    
     % Get indexes to update in current iteration
     currBins = currIndex:min(currIndex+nbinsPerEval-1,simulationLength);
-    
+
     % Linear projection of both stimulus history and coupling(if used)
     mixedStimulus(currBins) = linearProjection(currBins) + historyInteraction(currBins);
-    
+
     % Get current lmbdas by using exponent function
     currLambdas=  exp(mixedStimulus(currBins)) * dt;
-
+    
+    if fCoupling
+        currLambdas = min(0.3, currLambdas);
+    end
+    
     % Update lambdas of current bins
     lambdas(currBins) = currLambdas;
 
@@ -109,7 +119,8 @@ while currIndex < simulationLength
                 iiPostSpk = ispk+1:filterEnd; 
                 historyInteraction(iiPostSpk) =  historyInteraction(iiPostSpk) + learnedParams.firstSpikeFilter(1:length(iiPostSpk));
 
-            end            
+            end          
+            
             % determine bins for adding post spike filter
             currHistoryFilterIndex = min(simulationLength, ispk+spikeHistoryFilterLength); 
             
@@ -132,7 +143,7 @@ while currIndex < simulationLength
         % Update index of next iteration
         currIndex = ispk+1;
         muISI = currIndex/(sum(numOfSpikes));
-        nbinsPerEval = max(20, round(1.5*muISI)); 
+%        nbinsPerEval = max(20, round(1.5*muISI)); 
     end
     
 end
@@ -169,7 +180,6 @@ if fPlot
 end
 
 % Record lambdas
-%historyInteraction(historyInteraction < 0) = 0;
 finalLambdas = exp(linearProjection + historyInteraction) * dt;
 linearProjection = linearProjection + historyInteraction;
 end

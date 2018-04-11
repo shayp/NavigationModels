@@ -49,8 +49,14 @@ else
     stimulusParams = modelParams(2:end);
 end
 
-% Set learned params 
 learnedParams.allTuningParams = stimulusParams;
+
+if config.fPhaseLocking
+    learnedParams.phaseLockParams =  stimulusParams(end - config.numOfPhaseLockingFilters + 1:end);
+    stimulusParams(end - config.numOfPhaseLockingFilters + 1:end) = [];
+end
+
+% Set learned params 
 learnedParams.tuningParams = stimulusParams;
 learnedParams.modelType = modelType;
 end

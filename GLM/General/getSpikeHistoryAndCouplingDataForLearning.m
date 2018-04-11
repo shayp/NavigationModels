@@ -1,5 +1,7 @@
 function designMatrix = getSpikeHistoryAndCouplingDataForLearning(config, learningData, numOfCoupledNeurons, couplingData)
 
+
+
 % Get histort desifn matrix
 designMatrix = buildSpikeHistoryDesignMatrix(config.numOfHistoryParams,...
     learningData.historyBaseVectors, learningData.spiketrain, config.firstSpikeWindow);

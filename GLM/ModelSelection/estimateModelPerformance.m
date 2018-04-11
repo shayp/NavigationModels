@@ -42,6 +42,7 @@ metrics.varExplain = 1-(sse/sst);
 
 % Correlation ceoefficent
 metrics.correlation = corr(psthExp, psthSim,'type','Pearson');
+corr(psthExp, circshift(psthSim,Leg),'type','Pearson');
 metrics.correlation
 % Mean squared error
 metrics.mse = nanmean((psthSim - psthExp).^2);
@@ -53,13 +54,18 @@ metrics.Leg = Leg;
 expISI = diff(find(expFiringRate));
 
 maxExpISI = max(expISI);
-expISIPr = zeros(maxExpISI, 1);
-for j = 1:maxExpISI
-    expISIPr(j) = sum(expISI == j);
-end
-expISIPr = expISIPr / sum(expISIPr);
-expISITimes = linspace(1 * dt, maxExpISI * dt, maxExpISI);
 
+if isempty(maxExpISI)
+    expISIPr = zeros(100, 1);
+    expISITimes = linspace(1 * dt, 100 * dt, 100);
+else
+    expISIPr = zeros(maxExpISI, 1);
+    for j = 1:maxExpISI
+        expISIPr(j) = sum(expISI == j);
+    end
+    expISIPr = expISIPr / sum(expISIPr);
+    expISITimes = linspace(1 * dt, maxExpISI * dt, maxExpISI);
+end
 ISI.expISIPr = expISIPr;
 ISI.expISITimes = expISITimes;
 end

@@ -4,7 +4,7 @@ clear all;
 sessionName = '11025-19050503';
 
 % The neurons we choose to learn in this run
-neurons = [1 3];
+neurons = [1];
 
 % Get number of neurons in this run
 numOfNeurons = length(neurons);
@@ -13,7 +13,7 @@ numOfNeurons = length(neurons);
 folderPath = strcat('C:\projects\NavigationModels\GLM\rawDataForLearning\', sessionName);
 configFilePath = ['C:\projects\NavigationModels\GLM\rawDataForLearning\' 'config'];
 filePath = [folderPath '\data_for_cell_'];
-
+ 
 %% Learn single neurons, w/o history
 fCoupling = 0;
 coupledNeurons = [];
